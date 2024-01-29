@@ -1,0 +1,86 @@
+/**
+ * The function `getMany` is an asynchronous function that retrieves multiple documents from a
+ * database based on specified criteria and returns the data in a JSON response.
+ * @param {CrudModelI | CrudModelI[]} MyModels - The `MyModels` parameter can be either a single
+ * `CrudModelI` object or an array of `CrudModelI` objects.
+ * @param query - The `query` parameter is an object that represents the query parameters passed in
+ * the request. It is typically obtained from the `request.query` object.
+ * @param {PopulateFieldI | PopulateFieldI[]} populate - The `populate` parameter is used to specify
+ * which fields of the model should be populated with their referenced documents. It can be a single
+ * `PopulateFieldI` object or an array of `PopulateFieldI` objects. Each `PopulateFieldI` object has
+ * the following properties:
+ * @param {FilterQuery<T> | null} [category=null] - The `category` parameter is used to filter the
+ * query results based on a specific category. It is of type `FilterQuery<T>`, where `T` is the type
+ * of the data being queried. If no category is provided, it defaults to `null`.
+ */
+// async getMany<T>(
+//   MyModels: CrudModelI | CrudModelI[],
+//   query: typeof this.request.query,
+//   populate: PopulateFieldI | PopulateFieldI[],
+//   category: FilterQuery<T> | null = null
+// ) {
+//   try {
+//     let data: any;
+//     const all = [];
+//     if (Array.isArray(MyModels)) {
+//       MyModels.forEach(async (model: CrudModelI) => {
+//         let modelFind = category ? model.Model.find(category) : model.Model.find();
+//         if (model.exempt) modelFind = modelFind.select(model.exempt);
+//         if (populate && Array.isArray(populate))
+//           for (const pop of populate) {
+//             if (pop.model)
+//               modelFind = modelFind.populate({
+//                 path: pop.model,
+//                 select: pop.fields,
+//                 populate: pop.second_layer_populate,
+//               });
+//           }
+//         else if (populate && !Array.isArray(populate))
+//           if (populate.model)
+//             modelFind = modelFind.populate({
+//               path: populate.model,
+//               select: populate.fields,
+//               populate: populate.second_layer_populate,
+//             });
+//         const queryf = new Queries(modelFind, query).filter().limitFields().paginate().sort();
+//         const queryG = await queryf.model;
+//         if (!queryG) throw new ApiError(httpStatus.NOT_FOUND, `${model} is not successfully fetched`);
+//         data = all.push(queryG);
+//       });
+//     } else {
+//       let modelFind = category ? MyModels.Model.find(category) : MyModels.Model.find();
+//       if (MyModels.exempt) modelFind = modelFind.select(MyModels.exempt);
+//       if (populate && Array.isArray(populate))
+//         for (const pop of populate) {
+//           if (pop.model)
+//             modelFind = modelFind.populate({
+//               path: pop.model,
+//               select: pop.fields,
+//               populate: pop.second_layer_populate,
+//             });
+//         }
+//       else if (populate && !Array.isArray(populate))
+//         if (populate.model)
+//           modelFind = modelFind.populate({
+//             path: populate.model,
+//             select: populate.fields,
+//             populate: populate.second_layer_populate,
+//           });
+
+//       const queryf = new Queries(modelFind, query).filter().limitFields().sort().paginate();
+//       const queryG = await queryf.model;
+//       if (!queryG) throw new ApiError(httpStatus.NOT_FOUND, `${MyModels} is not successfully created`);
+//       data = queryG;
+//     }
+//     this.response.status(httpStatus.OK).json(
+//       responseMessage({
+//         success_status: true,
+//         message: 'data fetched successfully',
+//         data,
+//         doc_length: data.length,
+//       })
+//     );
+//   } catch (error) {
+//     this.next(error);
+//   }
+// }

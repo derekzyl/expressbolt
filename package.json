@@ -1,0 +1,19 @@
+{
+  "name": "pangolin",
+  "version": "1.0.0",
+  "description": "Crud helper using mongoose to make creation of api fast",
+  "main": "index.js",
+  "dependencies": {
+    "mongoose": "^8.1.1",
+    "typescript": "^5.3.3",
+    "undici-types": "^5.26.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.10"
+  }
+}
