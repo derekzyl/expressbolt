@@ -25,7 +25,7 @@ class Queries {
    */
   filter() {
     const queryObj = { ...this.request_query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    const excludedFields = ["page", "sort", "limit", "fields"];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
@@ -43,10 +43,10 @@ class Queries {
    */
   sort() {
     if (this.request_query.sort) {
-      const sortBy = this.request_query.sort.split(',').join(' ');
+      const sortBy = this.request_query.sort.split(",").join(" ");
       this.model = this.model.sort(sortBy);
     } else {
-      this.model = this.model.sort('-created_at');
+      this.model = this.model.sort("-created_at");
     }
 
     return this;
@@ -59,10 +59,10 @@ class Queries {
    */
   limitFields() {
     if (this.request_query.fields) {
-      const fields = this.request_query.fields.split(',').join(' ');
+      const fields = this.request_query.fields.split(",").join(" ");
       this.model = this.model.select(fields);
     } else {
-      this.model = this.model.select('-__v');
+      this.model = this.model.select("-__v");
     }
 
     return this;
@@ -85,4 +85,7 @@ class Queries {
   }
 }
 
+/* `export default Queries;` is exporting the `Queries` class as the default export of the module. This
+allows other modules to import the `Queries` class using the `import` statement. For example, in
+another module, you can import the `Queries` class like this: */
 export default Queries;

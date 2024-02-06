@@ -14,28 +14,19 @@ import { CustomMessageI } from "./interface.crud";
  * "development" or "production". By default, it is set to "development".
  * @returns an object with different properties based on the value of `msg.success_status`.
  */
-function responseMessage<V>(
-  msg: CustomMessageI<V>,
-  config: "development" | "production" = "development"
-) {
-  switch (msg.success_status) {
-    case true:
-      return {
-        message: msg.message,
-        data: msg.data,
-        success: msg.success_status,
-        doc_length: msg.doc_length,
-      };
-
-    case false:
-      return {
-        message: msg.message,
-        error: msg.error,
-        success: msg.success_status,
-        stack: config === "development" ? msg.stack : {},
-      };
-    default:
-      return null;
-  }
-}
+declare function responseMessage<V>(msg: CustomMessageI<V>, config?: "development" | "production"): {
+    message: string;
+    data: V;
+    success: true;
+    doc_length: number | undefined;
+    error?: undefined;
+    stack?: undefined;
+} | {
+    message: string;
+    error: any;
+    success: false;
+    stack: any;
+    data?: undefined;
+    doc_length?: undefined;
+} | null;
 export default responseMessage;

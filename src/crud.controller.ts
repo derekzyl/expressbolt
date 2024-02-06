@@ -1,14 +1,16 @@
-import { NextFunction, Request, Response } from 'express';
-import httpStatus from 'http-status';
-import { FilterQuery, UpdateQuery } from 'mongoose';
-import CrudService from './crud.service';
-import { CrudModelI, PopulateFieldI } from './interface.crud';
+import { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status";
+import { FilterQuery, UpdateQuery } from "mongoose";
+import CrudService from "./crud.service";
+import { CrudModelI, PopulateFieldI } from "./interface.crud";
 
 /**
  * Crud functionality
  *
  *
  */
+/* The `CrudC` class is a TypeScript class that provides CRUD operations (create, read, update, delete)
+for a given model. */
 class CrudC {
   request: Request;
 
@@ -17,10 +19,15 @@ class CrudC {
   next: NextFunction;
 
   /**
-   *
-   * @param {Request} request express request object
-   * @param {Response} response express response object
-   * @param {NextFunction} next function
+   * The constructor function takes in a request, response, and next function as parameters.
+   * @param {Request} request - The request object represents the HTTP request made by the client. It
+   * contains information such as the URL, headers, query parameters, and body of the request.
+   * @param {Response} response - The `response` parameter is an object that represents the HTTP
+   * response that will be sent back to the client. It contains methods and properties that allow you
+   * to set the response status code, headers, and body.
+   * @param {NextFunction} next - The `next` parameter is a function that is used to pass control to
+   * the next middleware function in the request-response cycle. It is typically used to invoke the
+   * next middleware function in the chain.
    */
   constructor(request: Request, response: Response, next: NextFunction) {
     this.request = request;
@@ -28,7 +35,24 @@ class CrudC {
     this.next = next;
   }
 
-  async create<T, U>(MyModel: CrudModelI, data: T, finder: FilterQuery<U>): Promise<Response | NextFunction | void> {
+  /**
+   * The function creates a new document in a database using a given model, data, and finder query, and
+   * returns a response or an error.
+   * @param {CrudModelI} MyModel - A variable representing a CRUD model interface or class.
+   * @param {T} data - The `data` parameter is of type `T` and represents the data that you want to
+   * create in the database. It could be an object or any other data type that matches the schema of
+   * the `MyModel` model.
+   * @param finder - The `finder` parameter is a query object used to filter the data when creating a
+   * new record. It is of type `FilterQuery<U>`, where `U` represents the type of the filter criteria.
+   * This parameter allows you to specify conditions that the created record must meet in order to be
+   * returned
+   * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
+   */
+  async create<T, U>(
+    MyModel: CrudModelI,
+    data: T,
+    finder: FilterQuery<U>
+  ): Promise<Response | NextFunction | void> {
     try {
       const response = await CrudService.create(MyModel, data, finder);
 
@@ -38,7 +62,21 @@ class CrudC {
     }
   }
 
-  async createMany<T, U>(MyModel: CrudModelI, data: T[], finder: FilterQuery<U>[]): Promise<Response | NextFunction | void> {
+  /**
+   * The function creates multiple documents in a database using a given model, data, and finder.
+   * @param {CrudModelI} MyModel - The `MyModel` parameter is a variable representing a CRUD model. It
+   * is of type `CrudModelI`, which is an interface defining the structure and behavior of a CRUD
+   * model.
+   * @param {T[]} data - The `data` parameter is an array of objects of type `T`. It represents the
+   * data that needs to be created in the database.
+   * @param {FilterQuery<U>[]} finder - The `finder` parameter is an array of `FilterQuery<U>` objects.
+   * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
+   */
+  async createMany<T, U>(
+    MyModel: CrudModelI,
+    data: T[],
+    finder: FilterQuery<U>[]
+  ): Promise<Response | NextFunction | void> {
     try {
       const response = await CrudService.createMany(MyModel, data, finder);
       return this.response.status(httpStatus.CREATED).json(response);
@@ -48,21 +86,22 @@ class CrudC {
   }
 
   /**
-   * Update
-   *
-   * ---------
-   *  @summary please insert the literal value update <T>
-   *
-   * @param {CrudModelI | CrudModelI[]} MyModel model object or an array of model object and whats its exempting when returning a response
-   * @param {Record<string, any>} data this is the data to be used for updating the model
-   * @param {Record<string, any>} filter this is used to find the document that need to be filtered
-   * @returns
-   *
-   * @example
-   * // returns a response
-   * update< T{ for the body}, U{ for the model }>(MyModel, data<T>, filter<U>)
+   * The function updates a model using the provided data and filter, and returns the updated response.
+   * @param {CrudModelI} MyModel - A variable representing a CRUD model interface. It is used to
+   * perform CRUD operations on a specific model.
+   * @param data - The `data` parameter is an object that contains the fields and values to be updated
+   * in the database. It represents the update query that will be executed on the `MyModel` collection.
+   * The type `T` represents the shape of the data object.
+   * @param filter - The `filter` parameter is a query object used to filter the documents to be
+   * updated in the database. It specifies the criteria that the documents must meet in order to be
+   * updated. The `filter` parameter is of type `FilterQuery<U>`, where `U` is the type of the filter
+   * @returns a promise that resolves to a response object.
    */
-  async update<T, U>(MyModel: CrudModelI | CrudModelI[], data: UpdateQuery<T>, filter: FilterQuery<U>) {
+  async update<T, U>(
+    MyModel: CrudModelI,
+    data: UpdateQuery<T>,
+    filter: FilterQuery<U>
+  ) {
     try {
       const response = await CrudService.update(MyModel, data, filter);
 
@@ -77,7 +116,7 @@ class CrudC {
    * Supports pagination, sorting, and field selection.
    * Can fetch data from multiple models if an array of models is provided.
    *
-   * @param {CrudModelI | CrudModelI[]} MyModels - The model(s) to fetch data from.
+   * @param {CrudModelI } MyModels - The model(s) to fetch data from.
    * @param {typeof this.request.query} query - The query parameters.
    * @param {PopulateFieldI | PopulateFieldI[]} populate - The fields to populate.
    * @param {FilterQuery<T> | null} [category=null] - The category filter.
@@ -103,13 +142,18 @@ class CrudC {
    * It also specifies the fields to be populated and the category filter.
    */
   async getMany<T>(
-    MyModels: CrudModelI | CrudModelI[],
+    MyModels: CrudModelI,
     query: typeof this.request.query,
     populate: PopulateFieldI | PopulateFieldI[],
     category: FilterQuery<T> | null = null
   ) {
     try {
-      const response = await CrudService.getMany(MyModels, query, populate, category);
+      const response = await CrudService.getMany(
+        MyModels,
+        query,
+        populate,
+        category
+      );
 
       this.response.status(httpStatus.OK).json(response);
     } catch (error) {
@@ -118,14 +162,24 @@ class CrudC {
   }
 
   /**
-   *
-   * @param {CrudModelI} MyModel -it takes a model and exempt field
-   * @param {Object} data it takes the field that is used to mďthď up the data to be deleted
-   * @example
-   * // returns a response
-   * delete< T the model >(MyModel,category<T>,)
+   * The function is an asynchronous method that deletes data from a model using a filter query and
+   * returns the response.
+   * @param {CrudModelI} MyModel - The MyModel parameter is an instance of a CRUD model. It represents
+   * the model or schema that you want to perform the delete operation on. It should implement the
+   * CrudModelI interface.
+   * @param data - The `data` parameter is a filter query object used to specify the criteria for
+   * deleting documents from the database. It is of type `FilterQuery<T>`, where `T` represents the
+   * type of the documents being deleted. The `FilterQuery` type is typically used in MongoDB queries
+   * to filter documents
+   * @example - The example below shows how to use the `delete` function to delete a document from the
+   * `Model` using a filter query.
+   * const crud = new Crud(request, response, next);
+   * const MyModel = {
+   *   Model: Model,
+   *   exempt: 'field1 field2',
+   * }
    */
-  async delete<T>(MyModel: CrudModelI | CrudModelI[], data: FilterQuery<T>) {
+  async delete<T>(MyModel: CrudModelI, data: FilterQuery<T>) {
     try {
       const response = await CrudService.delete(MyModel, data);
 
@@ -136,15 +190,17 @@ class CrudC {
   }
 
   /**
-   * Get One Crud Model
-   *
-   * -----------------
-   *
-   *
-   * @param MyModel - it takes object as parameter {model, exempt}
-   * @param data -data is the filter parameters and its an object  it takes `<key, value>`
-   * @param populate - takes the model name and the fields from the you want to populate
-   *
+   * The function retrieves one document from a database using a given model, data filter, and optional
+   * population fields, and returns the response as JSON.
+   * @param {CrudModelI} MyModel - The `MyModel` parameter is the model that you want to perform the
+   * operation on. It should be an instance of a CRUD model that implements the `CrudModelI` interface.
+   * @param data - The `data` parameter is a filter query object used to specify the conditions for
+   * finding a document in the database. It can be used to filter the documents based on certain
+   * criteria such as equality, inequality, greater than, less than, etc. The type `T` represents the
+   * type of the data
+   * @param {PopulateFieldI | PopulateFieldI[]} populate - The "populate" parameter is used to specify
+   * which fields of the retrieved document(s) should be populated with their referenced documents. It
+   * can be a single field or an array of fields to populate.
    * @example
    * ```ts
    * CrudModelI {
@@ -157,7 +213,12 @@ class CrudC {
    * // returns a response
    * getOne< T the model >(MyModel, category<T>, populate: { model?: string | undefined; fields?: string | undefined)})
    */
-  async getOne<T>(MyModel: CrudModelI | CrudModelI[], data: FilterQuery<T>, populate: PopulateFieldI | PopulateFieldI[]) {
+
+  async getOne<T>(
+    MyModel: CrudModelI,
+    data: FilterQuery<T>,
+    populate: PopulateFieldI | PopulateFieldI[]
+  ) {
     try {
       const response = await CrudService.getOne(MyModel, data, populate);
 

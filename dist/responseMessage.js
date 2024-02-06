@@ -1,4 +1,3 @@
-import { CustomMessageI } from "./interface.crud";
 /**
  *
  * @param {CustomMessageI} msg
@@ -14,28 +13,25 @@ import { CustomMessageI } from "./interface.crud";
  * "development" or "production". By default, it is set to "development".
  * @returns an object with different properties based on the value of `msg.success_status`.
  */
-function responseMessage<V>(
-  msg: CustomMessageI<V>,
-  config: "development" | "production" = "development"
-) {
-  switch (msg.success_status) {
-    case true:
-      return {
-        message: msg.message,
-        data: msg.data,
-        success: msg.success_status,
-        doc_length: msg.doc_length,
-      };
-
-    case false:
-      return {
-        message: msg.message,
-        error: msg.error,
-        success: msg.success_status,
-        stack: config === "development" ? msg.stack : {},
-      };
-    default:
-      return null;
-  }
+function responseMessage(msg, config = "development") {
+    switch (msg.success_status) {
+        case true:
+            return {
+                message: msg.message,
+                data: msg.data,
+                success: msg.success_status,
+                doc_length: msg.doc_length,
+            };
+        case false:
+            return {
+                message: msg.message,
+                error: msg.error,
+                success: msg.success_status,
+                stack: config === "development" ? msg.stack : {},
+            };
+        default:
+            return null;
+    }
 }
 export default responseMessage;
+//# sourceMappingURL=responseMessage.js.map

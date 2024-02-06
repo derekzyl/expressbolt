@@ -2,14 +2,37 @@
   "name": "pangolin",
   "version": "1.0.0",
   "description": "Crud helper using mongoose to make creation of api fast",
-  "main": "index.js",
+  "keywords": [
+    "mongoose",
+    "crud",
+    "api",
+    "helper",
+    "typescript",
+    "express"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts ",
   "dependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.18.2",
+    "http-status": "^1.7.3",
     "mongoose": "^8.1.1",
     "typescript": "^5.3.3",
     "undici-types": "^5.26.5"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pretest": "npm run build",
+    "test": "npm run check:node && npm run check:web && npm run check:web-no-bigint",
+    "check:node": "WEB=false mocha test/node",
+    "check:tsd": "npm run build:dts && tsd",
+    "build:ts": "node ./node_modules/typescript/bin/tsc",
+    "build:dts": "npm run build:ts && api-extractor run --typescript-compiler-folder node_modules/typescript --local && node etc/clean_definition_files.cjs",
+    "build:bundle": "rollup -c rollup.config.mjs",
+    "build": "npm run build:dts && npm run build:bundle",
+    "check:lint": "eslint -v && eslint --ext '.js,.ts' --max-warnings=0 src test && npm run build:dts && npm run check:tsd",
+    "format": "eslint --ext '.js,.ts' src test --fix",
+    "check:coverage": "nyc --check-coverage npm run check:node",
+    "prepare": "node etc/prepare.js"
   },
   "author": "",
   "license": "ISC",

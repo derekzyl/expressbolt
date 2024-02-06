@@ -1,5 +1,5 @@
-import { RequestOptions, ServerResponse } from 'http';
-import { Model, PopulateOptions } from 'mongoose';
+import { RequestOptions, ServerResponse } from "http";
+import { Model, PopulateOptions } from "mongoose";
 
 export interface CrudModelI {
   Model: Model<any>;
@@ -20,8 +20,6 @@ export interface CustomMessageI<V> {
   doc_length?: number;
 }
 
-
-
 export type NextFunction = (err?: any) => void;
 export type Request = RequestOptions;
-type Response = ServerResponse;
+export type Response = ServerResponse;
