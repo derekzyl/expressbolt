@@ -1,6 +1,6 @@
 {
-  "name": "pangolin",
-  "version": "1.0.0",
+  "name": "crud-exmongo",
+  "version": "1.0.1",
   "description": "Crud helper using mongoose to make creation of api fast",
   "keywords": [
     "mongoose",
@@ -31,8 +31,7 @@
     "build": "npm run build:dts && npm run build:bundle",
     "check:lint": "eslint -v && eslint --ext '.js,.ts' --max-warnings=0 src test && npm run build:dts && npm run check:tsd",
     "format": "eslint --ext '.js,.ts' src test --fix",
-    "check:coverage": "nyc --check-coverage npm run check:node",
-    "prepare": "node etc/prepare.js"
+    "check:coverage": "nyc --check-coverage npm run check:node"
   },
   "author": "",
   "license": "ISC",
