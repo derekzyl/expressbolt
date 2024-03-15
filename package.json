@@ -1,6 +1,6 @@
 {
-  "name": "crud-exmongo",
-  "version": "1.0.1",
+  "name": "expressbolt",
+  "version": "1.0.2",
   "description": "Crud helper using mongoose to make creation of api fast",
   "keywords": [
     "mongoose",
@@ -22,13 +22,10 @@
   },
   "scripts": {
     "pretest": "npm run build",
-    "test": "npm run check:node && npm run check:web && npm run check:web-no-bigint",
-    "check:node": "WEB=false mocha test/node",
     "check:tsd": "npm run build:dts && tsd",
     "build:ts": "node ./node_modules/typescript/bin/tsc",
-    "build:dts": "npm run build:ts && api-extractor run --typescript-compiler-folder node_modules/typescript --local && node etc/clean_definition_files.cjs",
-    "build:bundle": "rollup -c rollup.config.mjs",
-    "build": "npm run build:dts && npm run build:bundle",
+    "build:dts": "npm run build:ts",
+    "build": "npm run build:dts",
     "check:lint": "eslint -v && eslint --ext '.js,.ts' --max-warnings=0 src test && npm run build:dts && npm run check:tsd",
     "format": "eslint --ext '.js,.ts' src test --fix",
     "check:coverage": "nyc --check-coverage npm run check:node"

@@ -103,7 +103,7 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": [
-    "src/*.ts",
+    "src/*.ts", "src/files/crud.service.ts", "src/files/crud.model.ts", "src/files/responseMessage.ts", "src/files/query.ts", "src/files/crud.controller.ts", "src/files/interface.crud.ts",
   ],
   "exclude": [
     "node_modules"

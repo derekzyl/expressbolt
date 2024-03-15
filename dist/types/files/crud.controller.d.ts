@@ -1,22 +1,15 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-import httpStatus from "http-status";
-import CrudService from "./crud.service";
+import { NextFunction, Request, Response } from "express";
+import { FilterQuery, UpdateQuery } from "mongoose";
+import { CrudModelI, PopulateFieldI } from "./interface.crud";
 /**
  * Crud functionality
  *
  *
  */
-/* The `CrudC` class is a TypeScript class that provides CRUD operations (create, read, update, delete)
-for a given model. */
-class CrudC {
+declare class CrudController {
+    request: Request;
+    response: Response;
+    next: NextFunction;
     /**
      * The constructor function takes in a request, response, and next function as parameters.
      * @param {Request} request - The request object represents the HTTP request made by the client. It
@@ -28,11 +21,7 @@ class CrudC {
      * the next middleware function in the request-response cycle. It is typically used to invoke the
      * next middleware function in the chain.
      */
-    constructor(request, response, next) {
-        this.request = request;
-        this.response = response;
-        this.next = next;
-    }
+    constructor(request: Request, response: Response, next: NextFunction);
     /**
      * The function creates a new document in a database using a given model, data, and finder query, and
      * returns a response or an error.
@@ -46,17 +35,7 @@ class CrudC {
      * returned
      * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
      */
-    create(MyModel, data, finder) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.create(MyModel, data, finder);
-                return this.response.status(httpStatus.CREATED).json(response);
-            }
-            catch (error) {
-                return this.next(error);
-            }
-        });
-    }
+    create<T, U>(MyModel: CrudModelI, data: T, finder: FilterQuery<U>): Promise<Response | NextFunction | void>;
     /**
      * The function creates multiple documents in a database using a given model, data, and finder.
      * @param {CrudModelI} MyModel - The `MyModel` parameter is a variable representing a CRUD model. It
@@ -67,17 +46,7 @@ class CrudC {
      * @param {FilterQuery<U>[]} finder - The `finder` parameter is an array of `FilterQuery<U>` objects.
      * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
      */
-    createMany(MyModel, data, finder) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.createMany(MyModel, data, finder);
-                return this.response.status(httpStatus.CREATED).json(response);
-            }
-            catch (error) {
-                return this.next(error);
-            }
-        });
-    }
+    createMany<T, U>(MyModel: CrudModelI, data: T[], finder: FilterQuery<U>[]): Promise<Response | NextFunction | void>;
     /**
      * The function updates a model using the provided data and filter, and returns the updated response.
      * @param {CrudModelI} MyModel - A variable representing a CRUD model interface. It is used to
@@ -90,17 +59,7 @@ class CrudC {
      * updated. The `filter` parameter is of type `FilterQuery<U>`, where `U` is the type of the filter
      * @returns a promise that resolves to a response object.
      */
-    update(MyModel, data, filter) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.update(MyModel, data, filter);
-                return this.response.status(httpStatus.OK).json(response);
-            }
-            catch (error) {
-                return this.next(error);
-            }
-        });
-    }
+    update<T, U>(MyModel: CrudModelI, data: UpdateQuery<T>, filter: FilterQuery<U>): Promise<void | Response<any, Record<string, any>>>;
     /**
      * Fetches multiple documents from the database based on the provided query parameters.
      * Supports pagination, sorting, and field selection.
@@ -131,17 +90,7 @@ class CrudC {
      * This example initializes the `Crud` class object and calls the `getMany` method to fetch documents from the `Model` based on the provided query parameters.
      * It also specifies the fields to be populated and the category filter.
      */
-    getMany(MyModels, query, populate, category = null) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.getMany(MyModels, query, populate, category);
-                this.response.status(httpStatus.OK).json(response);
-            }
-            catch (error) {
-                this.next(error);
-            }
-        });
-    }
+    getMany<T>(MyModels: CrudModelI, query: typeof this.request.query, populate: PopulateFieldI | PopulateFieldI[], category?: FilterQuery<T> | null): Promise<void>;
     /**
      * The function is an asynchronous method that deletes data from a model using a filter query and
      * returns the response.
@@ -160,17 +109,7 @@ class CrudC {
      *   exempt: 'field1 field2',
      * }
      */
-    delete(MyModel, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.delete(MyModel, data);
-                this.response.status(httpStatus.OK).json(response);
-            }
-            catch (error) {
-                this.next(error);
-            }
-        });
-    }
+    delete<T>(MyModel: CrudModelI, data: FilterQuery<T>): Promise<void>;
     /**
      * The function retrieves one document from a database using a given model, data filter, and optional
      * population fields, and returns the response as JSON.
@@ -195,17 +134,6 @@ class CrudC {
      * // returns a response
      * getOne< T the model >(MyModel, category<T>, populate: { model?: string | undefined; fields?: string | undefined)})
      */
-    getOne(MyModel, data, populate) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const response = yield CrudService.getOne(MyModel, data, populate);
-                this.response.status(httpStatus.OK).json(response);
-            }
-            catch (error) {
-                this.next(error);
-            }
-        });
-    }
+    getOne<T>(MyModel: CrudModelI, data: FilterQuery<T>, populate: PopulateFieldI | PopulateFieldI[]): Promise<void>;
 }
-export default CrudC;
-//# sourceMappingURL=crud.controller.js.map
+export default CrudController;

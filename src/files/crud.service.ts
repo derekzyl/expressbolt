@@ -6,7 +6,7 @@ import { CrudModelI, PopulateFieldI } from "./interface.crud";
 import Queries from "./query";
 import responseMessage from "./responseMessage";
 
-class CrudS {
+class CrudService {
   /**
    * This function creates a new document in the database using the provided data and checks if the
    * document already exists based on the provided finder.
@@ -144,24 +144,6 @@ class CrudS {
   ): Promise<any> {
     const dataF: Array<any> = [];
 
-    // if (Array.isArray(MyModel)) {
-    //   await Promise.all(
-    //     MyModel.map(async (model) => {
-    //       const findAndUpdate = await model.Model.findOneAndUpdate(
-    //         filter,
-    //         data
-    //       ).select(model.exempt);
-    //       if (!findAndUpdate) {
-    //         throw new ApiError(
-    //           httpStatus.NOT_IMPLEMENTED,
-    //           `${data} not updated successfully`
-    //         );
-    //       } else {
-    //         dataF.push(findAndUpdate);
-    //       }
-    //     })
-    //   );
-    // } else {
     const findAndUpdate = await MyModel.Model.findOneAndUpdate(
       filter,
       data
@@ -174,11 +156,10 @@ class CrudS {
     } else {
       dataF.push(findAndUpdate);
     }
-    // }
 
-    return responseMessage<U[]>({
+    return responseMessage<U>({
       success_status: true,
-      data: dataF,
+      data: dataF[0],
       message: "Successfully updated",
     });
   }
@@ -218,7 +199,7 @@ class CrudS {
         modelFind = modelFind.select(model.exempt);
       }
       if (populate) {
-        modelFind = CrudS.populateModel(modelFind, populate);
+        modelFind = CrudService.populateModel(modelFind, populate);
       }
       const queryf = new Queries(modelFind, query)
         .filter()
@@ -241,7 +222,7 @@ class CrudS {
     return responseMessage<T[]>({
       success_status: true,
       message: "Data fetched successfully",
-      data: all,
+      data: all[0],
       doc_length: all.length,
     });
   }
@@ -350,40 +331,7 @@ class CrudS {
     // const response = await CrudService.
     const getData = [];
     let getOne: any;
-    // if (Array.isArray(MyModel)) {
-    //   MyModel.forEach(async (model: CrudModelI) => {
-    //     getOne = model.Model.findOne(data).select(model.exempt);
-    //     if (!getOne)
-    //       throw new ApiError(
-    //         httpStatus.NOT_FOUND,
-    //         `${MyModel} is not successfully fetched`
-    //       );
 
-    //     if (populate && Array.isArray(populate))
-    //       populate.forEach((pop) => {
-    //         if (pop.model)
-    //           getOne = getOne.populate({
-    //             path: pop.model,
-    //             select: pop.fields,
-    //             populate: pop.second_layer_populate,
-    //           });
-    //       });
-    //     else if (populate && !Array.isArray(populate))
-    //       if (populate.model)
-    //         getOne = getOne.populate({
-    //           path: populate.model,
-    //           select: populate.fields,
-    //           populate: populate.second_layer_populate,
-    //         });
-    //     // if (!getOne)
-    //     //   throw new ApiError(
-    //     //     `${model} is not successfully fetched`,
-    //     //     httpStatus.NOT_IMPLEMENTED
-    //     //   );
-    //     const gotten = await getOne.exec();
-    //     getData.push(gotten);
-    //   });
-    // } else {
     getOne = MyModel.Model.findOne(data).select(MyModel.exempt);
 
     if (!getOne)
@@ -410,14 +358,13 @@ class CrudS {
     const gotten = await getOne.exec();
 
     getData.push(gotten);
-    // }
 
-    return responseMessage<T[]>({
+    return responseMessage<T>({
       success_status: true,
       message: " fetched successfully",
-      data: getData,
+      data: getData[0],
     });
   }
 }
 
-export default CrudS;
+export default CrudService;

@@ -11,7 +11,7 @@ import { CrudModelI, PopulateFieldI } from "./interface.crud";
  */
 /* The `CrudC` class is a TypeScript class that provides CRUD operations (create, read, update, delete)
 for a given model. */
-class CrudC {
+class CrudController {
   request: Request;
 
   response: Response;
@@ -229,4 +229,4 @@ class CrudC {
   }
 }
 
-export default CrudC;
+export default CrudController;
