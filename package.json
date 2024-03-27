@@ -17,8 +17,7 @@
     "express": "^4.18.2",
     "http-status": "^1.7.3",
     "mongoose": "^8.1.1",
-    "typescript": "^5.3.3",
-    "undici-types": "^5.26.5"
+    "typescript": "^5.3.3"
   },
   "scripts": {
     "build": "tsc"
