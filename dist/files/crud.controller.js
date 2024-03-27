@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import httpStatus from "http-status";
 import CrudService from "./crud.service";
+import { errorCenter } from "./error.handler";
 /**
  * Crud functionality
  *
@@ -28,76 +29,84 @@ class CrudController {
      * the next middleware function in the request-response cycle. It is typically used to invoke the
      * next middleware function in the chain.
      */
-    constructor(request, response, next) {
+    constructor({ request, response, next, useNext = true, env = "development", }) {
         this.request = request;
         this.response = response;
         this.next = next;
+        this.useNext = useNext;
+        this.env = env;
     }
     /**
-     * The function creates a new document in a database using a given model, data, and finder query, and
+     * The function creates a new document in a database using a given model, data, and check query, and
      * returns a response or an error.
-     * @param {CrudModelI} MyModel - A variable representing a CRUD model interface or class.
+     * @param {CrudModelI} modelData - A variable representing a CRUD model interface or class.
      * @param {T} data - The `data` parameter is of type `T` and represents the data that you want to
      * create in the database. It could be an object or any other data type that matches the schema of
-     * the `MyModel` model.
-     * @param finder - The `finder` parameter is a query object used to filter the data when creating a
+     * the `modelData` model.
+     * @param check - The `check` parameter is a query object used to filter the data when creating a
      * new record. It is of type `FilterQuery<U>`, where `U` represents the type of the filter criteria.
      * This parameter allows you to specify conditions that the created record must meet in order to be
      * returned
      * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
      */
-    create(MyModel, data, finder) {
+    create({ modelData, data, check, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.create(MyModel, data, finder);
+                const response = yield CrudService.create({ modelData, data, check });
                 return this.response.status(httpStatus.CREATED).json(response);
             }
             catch (error) {
-                return this.next(error);
+                return this.useNext
+                    ? this.next(error)
+                    : errorCenter({ env: this.env, error: error, response: this.response });
             }
         });
     }
     /**
-     * The function creates multiple documents in a database using a given model, data, and finder.
-     * @param {CrudModelI} MyModel - The `MyModel` parameter is a variable representing a CRUD model. It
+     * The function creates multiple documents in a database using a given model, data, and check.
+     * @param {CrudModelI} modelData - The `modelData` parameter is a variable representing a CRUD model. It
      * is of type `CrudModelI`, which is an interface defining the structure and behavior of a CRUD
      * model.
      * @param {T[]} data - The `data` parameter is an array of objects of type `T`. It represents the
      * data that needs to be created in the database.
-     * @param {FilterQuery<U>[]} finder - The `finder` parameter is an array of `FilterQuery<U>` objects.
+     * @param {FilterQuery<U>[]} check - The `check` parameter is an array of `FilterQuery<U>` objects.
      * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
      */
-    createMany(MyModel, data, finder) {
+    createMany({ check, modelData, data, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.createMany(MyModel, data, finder);
+                const response = yield CrudService.createMany({ modelData, data, check });
                 return this.response.status(httpStatus.CREATED).json(response);
             }
             catch (error) {
-                return this.next(error);
+                return this.useNext
+                    ? this.next(error)
+                    : errorCenter({ env: this.env, error: error, response: this.response });
             }
         });
     }
     /**
      * The function updates a model using the provided data and filter, and returns the updated response.
-     * @param {CrudModelI} MyModel - A variable representing a CRUD model interface. It is used to
+     * @param {CrudModelI} modelData - A variable representing a CRUD model interface. It is used to
      * perform CRUD operations on a specific model.
      * @param data - The `data` parameter is an object that contains the fields and values to be updated
-     * in the database. It represents the update query that will be executed on the `MyModel` collection.
+     * in the database. It represents the update query that will be executed on the `modelData` collection.
      * The type `T` represents the shape of the data object.
      * @param filter - The `filter` parameter is a query object used to filter the documents to be
      * updated in the database. It specifies the criteria that the documents must meet in order to be
      * updated. The `filter` parameter is of type `FilterQuery<U>`, where `U` is the type of the filter
      * @returns a promise that resolves to a response object.
      */
-    update(MyModel, data, filter) {
+    update({ data, modelData, filter, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.update(MyModel, data, filter);
+                const response = yield CrudService.update({ modelData, data, filter });
                 return this.response.status(httpStatus.OK).json(response);
             }
             catch (error) {
-                return this.next(error);
+                return this.useNext
+                    ? this.next(error)
+                    : errorCenter({ env: this.env, error: error, response: this.response });
             }
         });
     }
@@ -106,7 +115,7 @@ class CrudController {
      * Supports pagination, sorting, and field selection.
      * Can fetch data from multiple models if an array of models is provided.
      *
-     * @param {CrudModelI } MyModels - The model(s) to fetch data from.
+     * @param {CrudModelI } modelData - The model(s) to fetch data from.
      * @param {typeof this.request.query} query - The query parameters.
      * @param {PopulateFieldI | PopulateFieldI[]} populate - The fields to populate.
      * @param {FilterQuery<T> | null} [category=null] - The category filter.
@@ -114,7 +123,7 @@ class CrudController {
      *
      * @example
      * const crud = new Crud(request, response, next);
-     * const MyModel = {
+     * const modelData = {
      *   Model: Model,
      *   exempt: 'field1 field2',
      * };
@@ -126,26 +135,33 @@ class CrudController {
      * };
      * const category = { category: 'category1' };
      *
-     * await crud.getMany(MyModel, query, populate, category);
+     * await crud.getMany(modelData, query, populate, category);
      *
      * This example initializes the `Crud` class object and calls the `getMany` method to fetch documents from the `Model` based on the provided query parameters.
      * It also specifies the fields to be populated and the category filter.
      */
-    getMany(MyModels, query, populate, category = null) {
+    getMany({ filter = null, modelData, populate, query, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.getMany(MyModels, query, populate, category);
+                const response = yield CrudService.getMany({
+                    modelData,
+                    query,
+                    populate,
+                    filter,
+                });
                 this.response.status(httpStatus.OK).json(response);
             }
             catch (error) {
-                this.next(error);
+                return this.useNext
+                    ? this.next(error)
+                    : errorCenter({ env: this.env, error: error, response: this.response });
             }
         });
     }
     /**
      * The function is an asynchronous method that deletes data from a model using a filter query and
      * returns the response.
-     * @param {CrudModelI} MyModel - The MyModel parameter is an instance of a CRUD model. It represents
+     * @param {CrudModelI} modelData - The modelData parameter is an instance of a CRUD model. It represents
      * the model or schema that you want to perform the delete operation on. It should implement the
      * CrudModelI interface.
      * @param data - The `data` parameter is a filter query object used to specify the criteria for
@@ -155,26 +171,28 @@ class CrudController {
      * @example - The example below shows how to use the `delete` function to delete a document from the
      * `Model` using a filter query.
      * const crud = new Crud(request, response, next);
-     * const MyModel = {
+     * const modelData = {
      *   Model: Model,
      *   exempt: 'field1 field2',
      * }
      */
-    delete(MyModel, data) {
+    delete({ data, modelData, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.delete(MyModel, data);
+                const response = yield CrudService.delete({ modelData, data });
                 this.response.status(httpStatus.OK).json(response);
             }
             catch (error) {
-                this.next(error);
+                return this.useNext
+                    ? this.next(error)
+                    : errorCenter({ env: this.env, error: error, response: this.response });
             }
         });
     }
     /**
      * The function retrieves one document from a database using a given model, data filter, and optional
      * population fields, and returns the response as JSON.
-     * @param {CrudModelI} MyModel - The `MyModel` parameter is the model that you want to perform the
+     * @param {CrudModelI} modelData - The `modelData` parameter is the model that you want to perform the
      * operation on. It should be an instance of a CRUD model that implements the `CrudModelI` interface.
      * @param data - The `data` parameter is a filter query object used to specify the conditions for
      * finding a document in the database. It can be used to filter the documents based on certain
@@ -193,12 +211,12 @@ class CrudController {
      *
      *   @example
      * // returns a response
-     * getOne< T the model >(MyModel, category<T>, populate: { model?: string | undefined; fields?: string | undefined)})
+     * getOne< T the model >(modelData, category<T>, populate: { model?: string | undefined; fields?: string | undefined)})
      */
-    getOne(MyModel, data, populate) {
+    getOne({ data, modelData, populate, }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield CrudService.getOne(MyModel, data, populate);
+                const response = yield CrudService.getOne({ modelData, data, populate });
                 this.response.status(httpStatus.OK).json(response);
             }
             catch (error) {

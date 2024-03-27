@@ -8,39 +8,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import httpStatus from "http-status";
-import ApiError from "./error.handler";
+import CustomError from "./error.handler";
 import Queries from "./query";
 import responseMessage from "./responseMessage";
 class CrudService {
     /**
      * This function creates a new document in the database using the provided data and checks if the
-     * document already exists based on the provided finder.
-     * @param {CrudModelI} MyModel - A variable of type `CrudModelI`, which is an interface for a CRUD
+     * document already exists based on the provided check.
+     * @param {CrudModelI} modelData - A variable of type `CrudModelI`, which is an interface for a CRUD
      * model.
      * @param {T} data - The `data` parameter is the object containing the data that you want to create
      * in the database. It is of type `T`, which means it can be any type you specify when calling the
      * `create` function.
-     * @param finder - The `finder` parameter is a filter query object used to find existing data in the
+     * @param check - The `check` parameter is a filter query object used to find existing data in the
      * database. It is of type `FilterQuery<U>`, where `U` represents the type of the filter query.
      * @returns a Promise that resolves to an object with the following properties:
      * - success_status: a boolean indicating whether the operation was successful
      * - data: the created data object
      * - message: a success message
      */
-    static create(MyModel, data, finder) {
+    static create({ check, modelData, data, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const find = Object.keys(finder).length !== 0
-                ? yield MyModel.Model.findOne(finder)
-                : undefined;
+            const find = Object.keys(check).length !== 0
+                ? yield modelData.Model.findOne(check)
+                : null;
             if (find) {
-                throw new ApiError(httpStatus.BAD_REQUEST, `the data ${JSON.stringify(Object.keys(finder).join(", "))} already exists in the database`);
+                throw new CustomError(httpStatus.BAD_REQUEST, `the data ${JSON.stringify(Object.keys(check).join(", "))} already exists in the database`);
             }
-            const create = new MyModel.Model(data);
+            const create = new modelData.Model(data);
             const created = yield create.save();
             if (!created) {
-                throw new ApiError(httpStatus.BAD_REQUEST, `${MyModel.Model.collection.collectionName} is not successfully created`);
+                throw new CustomError(httpStatus.BAD_REQUEST, `${modelData.Model.collection.collectionName} is not successfully created`);
             }
-            const dat = yield MyModel.Model.findById(created._id).select(MyModel.exempt);
+            const dat = yield modelData.Model.findById(created._id).select(modelData.exempt);
             return responseMessage({
                 success_status: true,
                 data: dat,
@@ -52,40 +52,40 @@ class CrudService {
      * The `createMany` function is a static method that creates multiple documents in a MongoDB
      * collection, performs a check to ensure that the data does not already exist, and returns the
      * created documents.
-     * @param {CrudModelI} MyModel - The `MyModel` parameter is an object that implements the
+     * @param {CrudModelI} modelData - The `modelData` parameter is an object that implements the
      * `CrudModelI` interface. It represents a model in a CRUD (Create, Read, Update, Delete) operation.
      * @param {T[]} data - An array of objects (T) that contains the data to be created in the database.
-     * @param {FilterQuery<U>[]} finder - `finder` is an array of filter queries used to check if any
+     * @param {FilterQuery<U>[]} check - `check` is an array of filter queries used to check if any
      * data already exists in the database. Each filter query is an object with key-value pairs
      * representing the fields and values to search for.
      * @returns a Promise that resolves to an object with the following properties:
      * - success_status: a boolean indicating whether the operation was successful or not
      * - data: an array of objects representing the created data, with only the selected properties
-     * specified by MyModel.exempt
+     * specified by modelData.exempt
      * - message: a string message indicating the result of the operation, which is "Successfully
      * created" in this case.
      */
-    static createMany(MyModel, data, finder) {
+    static createMany({ check, data, modelData, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (finder.length > 0)
-                yield Promise.all(finder.map((findr) => __awaiter(this, void 0, void 0, function* () {
-                    const find = Object.keys(findr).length !== 0
-                        ? yield MyModel.Model.findOne(findr)
-                        : undefined;
-                    if (find)
-                        throw new ApiError(httpStatus.BAD_REQUEST, `the data ${JSON.stringify(Object.keys(findr).join(", "))} already exists in the database`);
-                })));
-            const created = yield MyModel.Model.insertMany(data);
+            const checks = check.map((findr) => {
+                return Object.keys(findr).length !== 0
+                    ? modelData.Model.findOne(findr)
+                    : null;
+            });
+            const finds = yield Promise.all(checks);
+            finds.forEach((find, index) => {
+                if (find) {
+                    throw new CustomError(httpStatus.BAD_REQUEST, `the data ${JSON.stringify(Object.keys(check[index]).join(", "))} already exists in the database`);
+                }
+            });
+            const created = yield modelData.Model.insertMany(data);
             if (!created) {
-                throw new ApiError(httpStatus.BAD_REQUEST, `${MyModel.Model.collection.collectionName} is not successfully created`);
+                throw new CustomError(httpStatus.BAD_REQUEST, `${modelData.Model.collection.collectionName} is not successfully created`);
             }
-            const exemptedData = created.map((item) => __awaiter(this, void 0, void 0, function* () {
-                return yield MyModel.Model.findById(item._id).select(MyModel.exempt);
-            }));
-            const responseData = yield Promise.all(exemptedData);
+            const exemptedData = yield Promise.all(created.map((item) => modelData.Model.findById(item._id).select(modelData.exempt)));
             return responseMessage({
                 success_status: true,
-                data: responseData,
+                data: exemptedData,
                 message: "Successfully created",
             });
         });
@@ -93,7 +93,7 @@ class CrudService {
     /**
      * The function `update` updates a document in a MongoDB collection based on a filter and returns the
      * updated document.
-     * @param {CrudModelI} MyModel - A CrudModelI object that represents the model to be updated.
+     * @param {CrudModelI} modelData - A CrudModelI object that represents the model to be updated.
      * @param data - The `data` parameter is an object that contains the fields and values to be updated
      * in the database. It is of type `UpdateQuery<T>`, where `T` represents the type of the data being
      * updated.
@@ -105,12 +105,12 @@ class CrudService {
      * - data: an array of updated documents
      * - message: a string message indicating the success of the update
      */
-    static update(MyModel, data, filter) {
+    static update({ data, filter, modelData, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const dataF = [];
-            const findAndUpdate = yield MyModel.Model.findOneAndUpdate(filter, data).select(MyModel.exempt);
+            const findAndUpdate = yield modelData.Model.findOneAndUpdate(filter, data).select(modelData.exempt);
             if (!findAndUpdate) {
-                throw new ApiError(httpStatus.BAD_REQUEST, `${data} not updated successfully`);
+                throw new CustomError(httpStatus.BAD_REQUEST, `${data} not updated successfully`);
             }
             else {
                 dataF.push(findAndUpdate);
@@ -125,7 +125,7 @@ class CrudService {
     /**
      * The above function is a static method that retrieves multiple documents from a database based on
      * specified criteria and returns them as a response message.
-     * @param {CrudModelI} MyModels - The `MyModels` parameter is an object that implements the
+     * @param {CrudModelI} modelData - The `modelData` parameter is an object that implements the
      * `CrudModelI` interface. It represents the model(s) that you want to fetch data from.
      * @param query - The `query` parameter is of type `typeof request.query`, which means it represents
      * the query parameters of an HTTP request. It is used to filter, limit, paginate, and sort the data
@@ -142,13 +142,11 @@ class CrudService {
      * - data: an array containing the fetched data
      * - doc_length: a number indicating the length of the fetched data array
      */
-    static getMany(MyModels, query, populate, category = null) {
+    static getMany({ filter, modelData, populate, query, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const all = [];
             const processModel = (model) => __awaiter(this, void 0, void 0, function* () {
-                let modelFind = category
-                    ? model.Model.find(category)
-                    : model.Model.find();
+                let modelFind = filter ? model.Model.find(filter) : model.Model.find();
                 if (model.exempt) {
                     modelFind = modelFind.select(model.exempt);
                 }
@@ -162,14 +160,14 @@ class CrudService {
                     .sort();
                 const queryG = yield queryf.model;
                 if (!queryG) {
-                    throw new ApiError(httpStatus.NOT_FOUND, `${model} is not fetched`);
+                    throw new CustomError(httpStatus.NOT_FOUND, `${model} is not fetched`);
                 }
                 all.push(queryG);
             });
-            // if (Array.isArray(MyModels)) {
-            //   await Promise.all(MyModels.map(processModel));
+            // if (Array.isArray(modelData)) {
+            //   await Promise.all(modelData.map(processModel));
             // } else {
-            yield processModel(MyModels);
+            yield processModel(modelData);
             // }
             return responseMessage({
                 success_status: true,
@@ -208,7 +206,7 @@ class CrudService {
     }
     /**
      * The above function is a static method that deletes data from a model in a TypeScript application.
-     * @param {CrudModelI} MyModel - The MyModel parameter is of type CrudModelI, which is a model
+     * @param {CrudModelI} modelData - The modelData parameter is of type CrudModelI, which is a model
      * interface for CRUD operations.
      * @param data - The `data` parameter is a filter query object used to specify the criteria for
      * deleting documents from the database. It can be of any type (`T`) and is used to filter the
@@ -218,14 +216,14 @@ class CrudService {
      * - message: a string message indicating the result of the deletion
      * - data: a string value indicating that the deletion was completed
      */
-    static delete(MyModel, data) {
+    static delete({ data, modelData, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            // if (Array.isArray(MyModel)) {
+            // if (Array.isArray(modelData)) {
             //   Promise.all(
-            //     MyModel.map(async (model) => {
+            //     modelData.map(async (model) => {
             //       const delet = await model.Model.deleteOne(data);
             //       if (!delet) {
-            //         throw new ApiError(
+            //         throw new CustomError (
             //           httpStatus.NOT_IMPLEMENTED,
             //           `${model} is not successfully deleted`
             //         );
@@ -233,9 +231,9 @@ class CrudService {
             //     })
             //   );
             // } else {
-            const delet = yield MyModel.Model.deleteOne(data);
+            const delet = yield modelData.Model.deleteOne(data);
             if (!delet) {
-                throw new ApiError(httpStatus.NOT_FOUND, `${MyModel} is not successfully deleted`);
+                throw new CustomError(httpStatus.NOT_FOUND, `${modelData} is not successfully deleted`);
                 // }
             }
             return responseMessage({
@@ -248,7 +246,7 @@ class CrudService {
     /**
      * This function retrieves data from a database based on a given filter and optional population
      * fields.
-     * @param {CrudModelI | CrudModelI[]} MyModel - The `MyModel` parameter is either a single
+     * @param {CrudModelI | CrudModelI[]} modelData - The `modelData` parameter is either a single
      * `CrudModelI` object or an array of `CrudModelI` objects.
      * @param data - The `data` parameter is a filter query object used to specify the conditions for
      * fetching data from the database. It is of type `FilterQuery<T>`, where `T` represents the type of
@@ -262,14 +260,14 @@ class CrudService {
      * - message: a string message indicating the status of the operation
      * - data: an array containing the fetched data
      */
-    static getOne(MyModel, data, populate) {
+    static getOne({ modelData, data, populate, }) {
         return __awaiter(this, void 0, void 0, function* () {
             // const response = await CrudService.
             const getData = [];
             let getOne;
-            getOne = MyModel.Model.findOne(data).select(MyModel.exempt);
+            getOne = modelData.Model.findOne(data).select(modelData.exempt);
             if (!getOne)
-                throw new ApiError(httpStatus.NOT_FOUND, `${MyModel} is not successfully fetched`);
+                throw new CustomError(httpStatus.NOT_FOUND, `${modelData} is not successfully fetched`);
             if (populate && Array.isArray(populate))
                 populate.forEach((pop) => {
                     if (pop.model)

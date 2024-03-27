@@ -1,6 +1,6 @@
 {
   "name": "expressbolt",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Crud helper using mongoose to make creation of api fast",
   "keywords": [
     "mongoose",
@@ -21,18 +21,15 @@
     "undici-types": "^5.26.5"
   },
   "scripts": {
-    "pretest": "npm run build",
-    "check:tsd": "npm run build:dts && tsd",
-    "build:ts": "node ./node_modules/typescript/bin/tsc",
-    "build:dts": "npm run build:ts",
-    "build": "npm run build:dts",
-    "check:lint": "eslint -v && eslint --ext '.js,.ts' --max-warnings=0 src test && npm run build:dts && npm run check:tsd",
-    "format": "eslint --ext '.js,.ts' src test --fix",
-    "check:coverage": "nyc --check-coverage npm run check:node"
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^20.11.10"
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2"
   }
 }

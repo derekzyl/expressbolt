@@ -28,5 +28,5 @@ declare function responseMessage<V>(msg: CustomMessageI<V>, config?: "developmen
     stack: any;
     data?: undefined;
     doc_length?: undefined;
-} | null;
+};
 export default responseMessage;

@@ -29,8 +29,6 @@ function responseMessage(msg, config = "development") {
                 success: msg.success_status,
                 stack: config === "development" ? msg.stack : {},
             };
-        default:
-            return null;
     }
 }
 export default responseMessage;
