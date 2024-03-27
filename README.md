@@ -38,147 +38,178 @@ To use ExpressBolt in your project, follow these steps:
 
 2. Import ExpressBolt into your Express application:
 
-   ```javascript
+commons
+
+   ```typescript
    const express = require('express');
    const expressBolt = require('expressbolt');
+
+   ```
+
+   es2016
+
+   ```typescript
+import express from 'express'
+   import expressbolt from 'expressbolt'
    ```
 
 3. Set up routes and controllers using ExpressBolt classes and functions.
 
 ---
 
-## Usage
+## CrudModel
 
-### Example Controller
+- the crud model creates an easier way to create models using mongoose with strict adherance to all fields that are compulsory using typings as guard
 
-```javascript
-const express = require('express');
-const { CrudController } = require('expressbolt');
+### Usage
 
-const router = express.Router();
-const crudController = new CrudController();
+### user interface
 
-router.post('/create', async (req, res, next) => {
-  try {
-    // Example create operation
-    await crudController.create({
-      modelData: UserModel,
-      data: req.body,
-      check: { email: req.body.email }
-    });
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (error) {
-    next(error);
-  }
-});
+```typescript
 
-module.exports = router;
+interface UserI {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface UserDocI extends mongoose.Document, UserI {}
+interface ModelI {
+  isEmailTaken(
+    email: string,
+    excludeUserId?: mongoose.Types.ObjectId
+  ): Promise<boolean>;
+
+  paginate(
+    filter: Record<string, any>,
+    options: Record<string, any>
+  ): Promise<any>;
+}
+
 ```
 
-### Example Model
+### user model
 
-```javascript
-const mongoose = require('mongoose');
+- the user model is just an abstract it is no compulsory you use it with the Crud functions
+- you can create your own schema and use it as well
 
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  age: { type: Number }
+#### example usage
+
+```typescript
+import {
+  CrudController,
+  CrudService,
+  generateDynamicSchema,
+} from "expressbolt";
+import mongoose from "mongoose";
+
+
+const userModel = generateDynamicSchema<UserI, ModelI>({
+  modelName: "USER",
+  fields: {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  schemaOptions: {
+    timeStamp: true,
+  },
+  plugins: [
+    /* paginate */
+  ],
 });
 
-const UserModel = mongoose.model('User', userSchema);
-
-module.exports = UserModel;
 ```
+
+- the model returns `const {model, schema}= userModel` the model is the `model` and the `schema` can be extended to suit your schema build ups
 
 ### Example Error Handling
 
-```javascript
-const { errorCenter } = require('expressbolt');
+- still in consideration to expose the error handler so you can easily catch all your errors
+
+```typescript
+impor {errorCenter} from 'expressbolt';
 
 app.use((err, req, res, next) => {
   errorCenter({ error: err, response: res });
 });
 ```
 
----
-
-## Contributing
-
-Contributions to ExpressBolt are welcome! To contribute:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/improvement`)
-3. Make your changes.
-4. Commit your changes (`git commit -am 'Add new feature'`)
-5. Push to the branch (`git push origin feature/improvement`)
-6. Create a new Pull Request.
-
----
-
-## License
-
-ExpressBolt is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
-
----
-
-## Summary
+## CrudController
 
 The `CrudController` class is a TypeScript class that provides CRUD operations (create, read, update, delete) for a given model. It takes in a request, response, and next function as parameters in its constructor. The class has methods for creating a new document, creating multiple documents, updating a model, fetching multiple documents, deleting data, and retrieving one document from a database.
 
+- notable mentions:
+  - the controller has `next,
+    request: req,
+    response: res,
+    env: "production",
+    useNext: false,` as its argument ill explain the one thats not popular here  the `env` option takes `development` and `production` as its argument it will return stack trace error response if its in development,  the `useNext` is for us that are lazy to catch our own errors it will return the error message, the response pattern is listed below
+
+### Response Message
+
+- the message returned is either any of the below
+
+```typescript
+function responseMessage<V>(
+  msg: CustomMessageI<V>,
+  config: "development" | "production" = "development"
+) {
+  switch (msg.success_status) {
+    case true:
+      return {
+        message: msg.message,
+        data: msg.data,
+        success: msg.success_status,
+        doc_length: msg.doc_length,
+      };
+
+    case false:
+      return {
+        message: msg.message,
+        error: msg.error,
+        success: msg.success_status,
+        stack: config === "development" ? msg.stack : {},
+      };
+  }
+}
+```
+
 ## Example Usage
 
-```javascript
-// Create a new instance of the CrudController class
-const crudController = new CrudController({
-  request: req,
-  response: res,
-  next: next,
-  useNext: true,
-  env: "development",
-});
+```typescript
 
-// Create a new document
-await crudController.create({
-  modelData: model,
-  data: newData,
-  check: { field: value },
-});
+export async function getAllUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const crud = new CrudController({
+    next,
+    request: req,
+    response: res,
+    env: "production",
+    useNext: false,
+  });
 
-// Create multiple documents
-await crudController.createMany({
-  modelData: model,
-  data: [data1, data2],
-  check: [{ field: value1 }, { field: value2 }],
-});
+  crud.getMany<UserI>({
+    modelData: { Model: userModel.model, exempt: "-password" },
+    filter: { name: req.body.name },
+    populate: {},
+    query: req.query,
+  });
+}
 
-// Update a model
-await crudController.update({
-  modelData: model,
-  data: { field: newValue },
-  filter: { field: value },
-});
-
-// Fetch multiple documents
-await crudController.getMany({
-  modelData: model,
-  query: req.query,
-  populate: { model: "relatedModel", fields: "field1 field2" },
-  filter: { field: value },
-});
-
-// Delete data
-await crudController.delete({
-  modelData: model,
-  data: { field: value },
-});
-
-// Retrieve one document
-await crudController.getOne({
-  modelData: model,
-  data: { field: value },
-  populate: { model: "relatedModel", fields: "field1 field2" },
-});
 ```
 
 ## Code Analysis
@@ -199,6 +230,8 @@ ___
 - `getMany<T>({ modelData, query, populate, filter })`: Fetches multiple documents from the database based on the provided query parameters.
 - `delete<T>({ modelData, data })`: Deletes data from a model using a filter query.
 - `getOne<T>({ modelData, data, populate })`: Retrieves one document from a database using a given model, data filter, and optional population fields.
+- `T` : data type
+- `U`: data doc
 
 ___
 
@@ -209,55 +242,58 @@ ___
 - `next`: The next function is used to pass control to the next middleware function in the request-response cycle.
 - `useNext`: A boolean flag indicating whether to use the next middleware function.
 - `env`: The environment (development or production) in which the class is being used.
+- `modelData` : it contains the `model` and the `exempt` the exempt are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g exempt:'-password'` will remove the password field
+- `check`: it checks for fileds you want to be sure its not there before you create
+- `filter`: will filter the fields you want before you update or get,
+- `data`: its the payload in `create` the search query in `getOne` and `delete`
+- `populate`: the populate field takes this options `interface PopulateFieldI {
+  model?: string;
+  fields?: string;
+  second_layer_populate?: PopulateOptions | string;
+}` it takes the `model` you want to populate, it must be a key in your object and also it must be a referenced field it takes the fields tou want to retun in that referenced field `fields`, it takes also subdocument inside the referenced field example structure will now be:
+
+```typescript
+
+const prod = {
+  name:"foo",
+  subCategoryModel:{
+    name:'foo'
+    categoryModel:{
+      name:"foo"
+    }
+  }
+}
+```
 
 ___
 
-## Summary
+## CrudService
 
 The `CrudService` class provides methods for performing CRUD (Create, Read, Update, Delete) operations on a MongoDB database. It includes functions for creating new documents, updating existing documents, fetching data from the database, and deleting documents. The class also includes a method for populating referenced fields in the fetched data.
+the  crudservice is basically a function that you can reuse here you handle the response and data it returns the value and throws errors if not vali that you have to handle yourself
 
 ## Example Usage
 
-```javascript
+```typescript
 // Creating a new document
-const createData = {
-  name: "John Doe",
-  age: 25,
-  email: "johndoe@example.com"
-};
-const createResult = await CrudService.create({
-  modelData: userModel, // CrudModelI object representing the user model
-  data: createData,
-  check: { email: createData.email } // Check if email already exists in the database
-});
-console.log(createResult);
 
-// Updating a document
-const updateData = { age: 26 };
-const updateFilter = { name: "John Doe" };
-const updateResult = await CrudService.update({
-  modelData: userModel, // CrudModelI object representing the user model
-  data: updateData,
-  filter: updateFilter
-});
-console.log(updateResult);
+export async function createUser(user: UserI) {
+  const userCreate = await CrudService.create<UserI, UserDocI>({
+    check: { email: user.email },
+    data: user,
+    modelData: { Model: userModel.model, exempt: "-password" },
+  });
+  return userCreate;
+}
 
-// Fetching multiple documents
-const fetchQuery = { age: { $gte: 25 } };
-const fetchResult = await CrudService.getMany({
-  modelData: userModel, // CrudModelI object representing the user model
-  query: req.query, // Query parameters from HTTP request
-  populate: "address" // Populate the 'address' field with referenced documents
-});
-console.log(fetchResult);
-
-// Deleting a document
-const deleteFilter = { name: "John Doe" };
-const deleteResult = await CrudService.delete({
-  modelData: userModel, // CrudModelI object representing the user model
-  data: deleteFilter
-});
-console.log(deleteResult);
+export async function getUsers(id: mongoose.Types.ObjectId) {
+  const user = await CrudService.getOne<UserI>({
+    modelData: { Model: userModel.model, exempt: "-password" },
+    data: { _id: id },
+    populate: {},
+  });
+  return user;
+}
 ```
 
 ## Code Analysis
@@ -281,6 +317,8 @@ ___
 - `populateModel`: Populates fields in a model or query object with referenced documents.
 - `delete`: Deletes documents from the database based on a filter query.
 - `getOne`: Retrieves data from the database based on a filter query and optional population fields.
+- `T` : data type
+- `U`: data doc
 
 ___
 
@@ -290,17 +328,39 @@ ___
 - `data`: Contains the data to be created or updated in the database.
 - `check`: Specifies the filter query used to check if data already exists in the database.
 - `filter`: Specifies the filter query used to fetch or update documents in the database.
-- `populate`: Specifies the fields to be populated with referenced documents in the fetched data.
+- `populate`: the populate field takes this options `interface PopulateFieldI {
+  model?: string;
+  fields?: string;
+  second_layer_populate?: PopulateOptions | string;
+}` it takes the `model` you want to populate, it must be a key in your object and also it must be a referenced field it takes the fields tou want to retun in that referenced field `fields`, it takes also subdocument inside the referenced field example structure will now be:
+
+```typescript
+
+const prod = {
+  name:"foo",
+  subCategoryModel:{
+    name:'foo'
+    categoryModel:{
+      name:"foo"
+    }
+  }
+}
+```
+
+- `modelData` : it contains the `model` and the `exempt` the exempt are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g exempt:'-password'` will remove the password field
+- `check`: it checks for fileds you want to be sure its not there before you create
+- `filter`: will filter the fields you want before you update or get,
+- `data`: its the payload in `create` the search query in `getOne` and `delete`
 
 ___
 
-## Summary
+## Query
 
-The `Queries` class is a TypeScript class that provides methods for filtering, sorting, selecting specific fields, and paginating data in a model object.
+The `Queries` class is a TypeScript class that provides methods for filtering, sorting, selecting specific fields, and paginating data in a model object. its not exposed but this is how it looks like
 
 ## Example Usage
 
-```javascript
+```typescript
 // Create an instance of the Queries class
 const queries = new Queries(model, request_query);
 
@@ -356,8 +416,8 @@ This code defines a function called `responseMessage` that takes in a custom mes
 
 ## Example Usage
 
-```javascript
-import responseMessage from "./responseMessage";
+```typescript
+
 
 const message = {
   message: "Success",
@@ -395,3 +455,109 @@ ___
 - An object with different properties based on the value of `msg.success_status`. If `msg.success_status` is true, it includes `message`, `data`, `success`, and `doc_length` properties. If `msg.success_status` is false, it includes `message`, `error`, `success`, and `stack` (depending on the value of `config`) properties.
 
 ___
+---
+
+### More Examples
+
+```typescript
+
+interface BlogI {
+  author: mongoose.Types.ObjectId;
+  blog: string;
+  likes: number;
+  title: string;
+}
+
+interface BlogDocI extends mongoose.Document, BlogI {}
+interface BlogModelI {
+  isTitleTaken(
+    title: string,
+    excludeBlogId?: mongoose.Types.ObjectId
+  ): Promise<boolean>;
+}
+const blogModel = generateDynamicSchema<BlogI, BlogModelI>({
+  modelName: "BLOG",
+  fields: {
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "USER",
+    },
+    blog: {
+      type: String,
+      required: true,
+    },
+    likes: {
+      type: Number,
+      required: true,
+    },
+    title: {
+      type: String,
+    },
+  },
+  schemaOptions: {
+    timeStamp: true,
+  },
+  plugins: [
+    /* paginate */
+  ],
+});
+
+function getManyBlog(req: Request, res: Response, next: NextFunction) {
+  const crud = new CrudController({
+    next,
+    request: req,
+    response: res,
+    env: "production",
+    useNext: false,
+  });
+
+  crud.getMany<BlogDocI>({
+    modelData: { Model: blogModel.model, exempt: "-_v" },
+    filter: { author: req.user.id },
+    populate: { model: "author", fields: "name" },
+    query: req.query,
+  });
+}
+
+async function deleteBlog(req: Request, res: Response, next: NextFunction) {
+  const crud = new CrudController({
+    next,
+    request: req,
+    response: res,
+    env: "production",
+    useNext: false,
+  });
+
+  await crud.delete<BlogDocI>({
+    modelData: { Model: blogModel.model, exempt: "-_v" },
+    data: { _id: req.body.id },
+  });
+}
+
+const app: Express = express();
+
+app.get("/blog", getManyBlog);
+
+
+
+```
+
+## Contributing
+
+Contributions to ExpressBolt are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/improvement`)
+3. Make your changes.
+4. Commit your changes (`git commit -am 'Add new feature'`)
+5. Push to the branch (`git push origin feature/improvement`)
+6. Create a new Pull Request.
+
+---
+
+## License
+
+ExpressBolt is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+---
