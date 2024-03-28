@@ -1,7 +1,8 @@
 {
   "name": "expressbolt",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Crud helper using mongoose to make creation of api fast",
+  "author": "Derek Og <derekzyl@gmail.com>",
   "keywords": [
     "mongoose",
     "crud",
@@ -10,6 +11,11 @@
     "typescript",
     "express"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/derekzyl/expressbolt.git",
+    "directory": ""
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
@@ -19,11 +25,15 @@
     "mongoose": "^8.1.1",
     "typescript": "^5.3.3"
   },
+  "bugs": {
+    "url": "https://github.com/derekzyl/expressbolt/issues",
+    "email": "derekzyl@gmail.com"
+  },
   "scripts": {
     "build": "tsc"
   },
-  "author": "",
-  "license": "ISC",
+  "homepage": "https://github.com/derekzyl/expressbolt#readme",
+  "license": "MIT",
   "devDependencies": {
     "@microsoft/api-extractor": "^7.43.0",
     "@types/jest": "^29.5.12",
