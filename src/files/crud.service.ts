@@ -1,6 +1,6 @@
 import { request } from "express";
 import httpStatus from "http-status";
-import { FilterQuery, UpdateQuery } from "mongoose";
+import { Document, FilterQuery, UpdateQuery } from "mongoose";
 import CustomError from "./error.handler";
 import { CrudModelI, PopulateFieldI } from "./interface.crud";
 import Queries from "./query";
@@ -8,29 +8,26 @@ import responseMessage from "./responseMessage";
 
 class CrudService {
   /**
-   * This function creates a new document in the database using the provided data and checks if the
-   * document already exists based on the provided check.
-   * @param {CrudModelI} modelData - A variable of type `CrudModelI`, which is an interface for a CRUD
-   * model.
-   * @param {T} data - The `data` parameter is the object containing the data that you want to create
-   * in the database. It is of type `T`, which means it can be any type you specify when calling the
-   * `create` function.
-   * @param check - The `check` parameter is a filter query object used to find existing data in the
-   * database. It is of type `FilterQuery<U>`, where `U` represents the type of the filter query.
-   * @returns a Promise that resolves to an object with the following properties:
-   * - success_status: a boolean indicating whether the operation was successful
-   * - data: the created data object
-   * - message: a success message
+   * The `create` function creates a document in a MongoDB collection.
+   * It takes in a `CrudModelI` object, the data to be created, and a filter to check for existing documents.
+   * It returns a Promise that resolves to a response message containing the successfully created document.
+   *
+   * @param {Object} param - An object containing the `modelData`, `data`, and `check` properties.
+   * @param {CrudModelI<T>} param.modelData - A `CrudModelI` object representing the MongoDB collection.
+   * @param {T} param.data - The data to be created.
+   * @param {FilterQuery<T & Document>} param.check - A filter to check for existing documents.
+   * @returns {Promise<any>} A Promise that resolves to a response message containing the successfully created document.
    */
-  static async create<T, U>({
+  static async create<T>({
     check,
     modelData,
     data,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: T;
-    check: FilterQuery<U>;
+    check: FilterQuery<T & Document>;
   }): Promise<any> {
+    type U = T & Document;
     const find =
       Object.keys(check).length !== 0
         ? await modelData.Model.findOne(check)
@@ -55,7 +52,7 @@ class CrudService {
     }
 
     const dat = await modelData.Model.findById(created._id).select(
-      modelData.exempt
+      modelData.exempt.join(" ")
     );
 
     return responseMessage<U>({
@@ -66,30 +63,24 @@ class CrudService {
   }
 
   /**
-   * The `createMany` function is a static method that creates multiple documents in a MongoDB
-   * collection, performs a check to ensure that the data does not already exist, and returns the
-   * created documents.
-   * @param {CrudModelI} modelData - The `modelData` parameter is an object that implements the
-   * `CrudModelI` interface. It represents a model in a CRUD (Create, Read, Update, Delete) operation.
-   * @param {T[]} data - An array of objects (T) that contains the data to be created in the database.
-   * @param {FilterQuery<U>[]} check - `check` is an array of filter queries used to check if any
-   * data already exists in the database. Each filter query is an object with key-value pairs
-   * representing the fields and values to search for.
-   * @returns a Promise that resolves to an object with the following properties:
-   * - success_status: a boolean indicating whether the operation was successful or not
-   * - data: an array of objects representing the created data, with only the selected properties
-   * specified by modelData.exempt
-   * - message: a string message indicating the result of the operation, which is "Successfully
-   * created" in this case.
+   * The function `createMany` creates multiple documents in a MongoDB collection based on an array of data.
+   * It takes in a `CrudModelI` object, an array of data, and an array of filters to check for existing documents.
+   * It returns a Promise that resolves to a response message containing the successfully created documents.
+   *
+   * @param {Object} param - An object containing the `modelData`, `data`, and `check` properties.
+   * @param {CrudModelI<T>} param.modelData - A `CrudModelI` object representing the model to be created.
+   * @param {T[]} param.data - An array of data to be created.
+   * @param {FilterQuery<T & Document>[]} param.check - An array of filters to check for existing documents.
+   * @returns {Promise<any>} A Promise that resolves to a response message containing the successfully created documents.
    */
-  static async createMany<T, U>({
+  static async createMany<T>({
     check,
     data,
     modelData,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: T[];
-    check: FilterQuery<U>[];
+    check: FilterQuery<T & Document>[];
   }): Promise<any> {
     const checks = check.map((findr) => {
       return Object.keys(findr).length !== 0
@@ -121,11 +112,11 @@ class CrudService {
 
     const exemptedData = await Promise.all(
       created.map((item) =>
-        modelData.Model.findById(item._id).select(modelData.exempt)
+        modelData.Model.findById(item._id).select(modelData.exempt.join(" "))
       )
     );
 
-    return responseMessage<U[]>({
+    return responseMessage<(T & Document)[]>({
       success_status: true,
       data: exemptedData,
       message: "Successfully created",
@@ -133,35 +124,31 @@ class CrudService {
   }
 
   /**
-   * The function `update` updates a document in a MongoDB collection based on a filter and returns the
-   * updated document.
-   * @param {CrudModelI} modelData - A CrudModelI object that represents the model to be updated.
-   * @param data - The `data` parameter is an object that contains the fields and values to be updated
-   * in the database. It is of type `UpdateQuery<T>`, where `T` represents the type of the data being
-   * updated.
-   * @param filter - The `filter` parameter is used to specify the conditions that the documents must
-   * meet in order to be updated. It is of type `FilterQuery<U>`, where `U` represents the type of the
-   * document being filtered.
-   * @returns a Promise that resolves to an object with the following properties:
-   * - success_status: a boolean indicating whether the update was successful or not
-   * - data: an array of updated documents
-   * - message: a string message indicating the success of the update
+   * The `update` static method is used to update a document in a database based on specified criteria.
+   *
+   * @param {Object} params - The `params` object contains the necessary parameters for the update operation.
+   * @param {CrudModelI<T>} params.modelData - The `modelData` parameter represents the model(s) to update.
+   * @param {UpdateQuery<T>} params.data - The `data` parameter represents the update data.
+   * @param {FilterQuery<T & Document>} params.filter - The `filter` parameter represents the criteria to
+   * identify the document(s) to update.
+   * @returns {Promise<any>} The method returns a promise that resolves to a response message containing the
+   * updated document and a success status.
    */
-  static async update<T, U>({
+  static async update<T>({
     data,
     filter,
     modelData,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: UpdateQuery<T>;
-    filter: FilterQuery<U>;
+    filter: FilterQuery<T & Document>;
   }): Promise<any> {
     const dataF: Array<any> = [];
 
     const findAndUpdate = await modelData.Model.findOneAndUpdate(
       filter,
       data
-    ).select(modelData.exempt);
+    ).select(modelData.exempt.join(" "));
     if (!findAndUpdate) {
       throw new CustomError(
         httpStatus.BAD_REQUEST,
@@ -171,7 +158,7 @@ class CrudService {
       dataF.push(findAndUpdate);
     }
 
-    return responseMessage<U>({
+    return responseMessage<T & Document>({
       success_status: true,
       data: dataF[0],
       message: "Successfully updated",
@@ -179,24 +166,20 @@ class CrudService {
   }
 
   /**
-   * The above function is a static method that retrieves multiple documents from a database based on
-   * specified criteria and returns them as a response message.
-   * @param {CrudModelI} modelData - The `modelData` parameter is an object that implements the
-   * `CrudModelI` interface. It represents the model(s) that you want to fetch data from.
-   * @param query - The `query` parameter is of type `typeof request.query`, which means it represents
-   * the query parameters of an HTTP request. It is used to filter, limit, paginate, and sort the data
-   * being fetched.
-   * @param {PopulateFieldI | PopulateFieldI[]} populate - The `populate` parameter is used to specify
-   * which fields of the model should be populated with their referenced documents. It can be a single
-   * field or an array of fields.
-   * @param {FilterQuery<T> | null} [category=null] - The `category` parameter is used to filter the
-   * documents in the database based on a specific condition. It can be a query object that specifies
-   * the filtering criteria. If no `category` is provided, all documents will be fetched.
-   * @returns a Promise that resolves to an object with the following properties:
-   * - success_status: a boolean indicating whether the data was fetched successfully
-   * - message: a string message indicating the status of the fetch operation
-   * - data: an array containing the fetched data
-   * - doc_length: a number indicating the length of the fetched data array
+   * This function retrieves multiple documents from a MongoDB collection based on the provided
+   * filter, model, populate, and query parameters.
+   * @param {Object} params - The `params` object contains the necessary parameters for the getMany
+   * operation.
+   * @param {CrudModelI<T>} params.modelData - The `modelData` parameter represents the model(s) to
+   * retrieve documents from.
+   * @param {FilterQuery<T> | null} params.filter - The `filter` parameter represents the criteria to
+   * identify the documents to retrieve.
+   * @param {PopulateFieldI<T> | PopulateFieldI<T>[]} params.populate - The `populate` parameter
+   * represents the fields to populate in the retrieved documents.
+   * @param {typeof request.query} params.query - The `query` parameter represents the query parameters
+   * from the request.
+   * @returns {Promise<any>} The method returns a promise that resolves to a response message object
+   * containing the retrieved documents, a success status, and other relevant information.
    */
   static async getMany<T>({
     filter,
@@ -204,16 +187,16 @@ class CrudService {
     populate,
     query,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     query: typeof request.query;
-    populate: PopulateFieldI | PopulateFieldI[];
+    populate: PopulateFieldI<T> | PopulateFieldI<T>[];
     filter: FilterQuery<T> | null;
   }): Promise<any> {
     const all: any[] = [];
-    const processModel = async (model: CrudModelI) => {
+    const processModel = async (model: CrudModelI<T>) => {
       let modelFind = filter ? model.Model.find(filter) : model.Model.find();
       if (model.exempt) {
-        modelFind = modelFind.select(model.exempt);
+        modelFind = modelFind.select(model.exempt.join(" "));
       }
       if (populate) {
         modelFind = CrudService.populateModel(modelFind, populate);
@@ -245,19 +228,21 @@ class CrudService {
   }
 
   /**
-   * The function `populateModel` takes a modelFind object and a populate object or array of objects,
-   * and returns the modelFind object with populated fields based on the populate object(s).
-   * @param {any} modelFind - The `modelFind` parameter is the model or query object that you want to
-   * populate with data. It could be an instance of a model or a query object that you want to populate
-   * with data.
-   * @param {PopulateFieldI | PopulateFieldI[]} populate - The `populate` parameter is used to specify
-   * the fields that should be populated in the `modelFind` object. It can be either a single
-   * `PopulateFieldI` object or an array of `PopulateFieldI` objects.
-   * @returns the populated model.
+   * The function `populateModel` populates a model with specified fields and nested fields based on
+   * the provided criteria.
+   * @param {any} modelFind - The `modelFind` parameter is the model object that you want to populate
+   * with additional data. It could be a Mongoose model instance or any other object that supports
+   * population of fields.
+   * @param {PopulateFieldI<T> | PopulateFieldI<T>[]} populate - The `populate` parameter in the
+   * `populateModel` function is used to specify which fields in the model should be populated with
+   * additional data. It can be a single `PopulateFieldI` object or an array of `PopulateFieldI`
+   * objects. Each `PopulateFieldI` object
+   * @returns The `populateModel` function returns the result of populating the specified fields in the
+   * modelFind object based on the populate configuration provided.
    */
-  private static populateModel(
+  private static populateModel<T>(
     modelFind: any,
-    populate: PopulateFieldI | PopulateFieldI[]
+    populate: PopulateFieldI<T> | PopulateFieldI<T>[]
   ): any {
     if (!populate) {
       return modelFind;
@@ -266,35 +251,34 @@ class CrudService {
     const populateArr = Array.isArray(populate) ? populate : [populate];
 
     return populateArr.reduce((model, pop) => {
-      if (!pop.model) {
+      if (!pop.path) {
         return model;
       }
 
       return model.populate({
-        path: pop.model,
-        select: pop.fields,
+        path: pop.path,
+        select: pop.fields?.join(" "),
         populate: pop.second_layer_populate,
       });
     }, modelFind);
   }
 
   /**
-   * The above function is a static method that deletes data from a model in a TypeScript application.
-   * @param {CrudModelI} modelData - The modelData parameter is of type CrudModelI, which is a model
-   * interface for CRUD operations.
-   * @param data - The `data` parameter is a filter query object used to specify the criteria for
-   * deleting documents from the database. It can be of any type (`T`) and is used to filter the
-   * documents to be deleted.
-   * @returns a Promise that resolves to an object with the following properties:
-   * - success_status: a boolean indicating whether the deletion was successful or not
-   * - message: a string message indicating the result of the deletion
-   * - data: a string value indicating that the deletion was completed
+   * The function `delete` is an asynchronous static method in TypeScript that deletes data based on
+   * the provided filter query and model data, handling errors and returning a success message.
+   * @param  - The `delete` method you provided is an asynchronous function that deletes data from a
+   * database using the given `modelData` and `data` parameters. Here's a breakdown of the parameters:
+   * @returns The `delete` method is returning a Promise that resolves to an object with the following
+   * properties:
+   * - `success_status`: a boolean value indicating the success status of the deletion operation
+   * - `message`: a string message indicating that the deletion was successful
+   * - `data`: a string value indicating that the data was deleted
    */
   static async delete<T>({
     data,
     modelData,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: FilterQuery<T>;
   }): Promise<any> {
     // if (Array.isArray(modelData)) {
@@ -325,60 +309,86 @@ class CrudService {
       data: "deleted",
     });
   }
+  /**
+   * This TypeScript function deletes multiple documents based on a filter query using the deleteMany
+   * method and returns a success message.
+   * @param  - The `deleteMany` function takes in two parameters:
+   * @returns The `deleteMany` function returns a Promise that resolves to an object with the following
+   * properties:
+   * - `success_status`: a boolean indicating the success status of the deletion operation (true in
+   * this case)
+   * - `message`: a string message indicating that the deletion was successful ("Deleted successfully"
+   * in this case)
+   * - `data`: a string value indicating that the data was deleted ("deleted" in this case
+   */
+  static async deleteMany<T>({
+    data,
+    modelData,
+  }: {
+    modelData: CrudModelI<T>;
+    data: FilterQuery<T>;
+  }): Promise<any> {
+    // if (Array.isArray(modelData)) {
+    //   Promise.all(
+    //     modelData.map(async (model) => {
+    //       const delet = await model.Model.deleteOne(data);
+    //       if (!delet) {
+    //         throw new CustomError (
+    //           httpStatus.NOT_IMPLEMENTED,
+    //           `${model} is not successfully deleted`
+    //         );
+    //       }
+    //     })
+    //   );
+    // } else {
+    const delet = await modelData.Model.deleteMany(data);
+    if (!delet) {
+      throw new CustomError(
+        httpStatus.NOT_FOUND,
+        `${modelData} is not successfully deleted`
+      );
+      // }
+    }
+
+    return responseMessage<string>({
+      success_status: true,
+      message: "Deleted successfully",
+      data: "deleted",
+    });
+  }
 
   /**
-   * This function retrieves data from a database based on a given filter and optional population
-   * fields.
-   * @param {CrudModelI | CrudModelI[]} modelData - The `modelData` parameter is either a single
-   * `CrudModelI` object or an array of `CrudModelI` objects.
-   * @param data - The `data` parameter is a filter query object used to specify the conditions for
-   * fetching data from the database. It is of type `FilterQuery<T>`, where `T` represents the type of
-   * the data being fetched.
-   * @param {PopulateFieldI | PopulateFieldI[]} populate - The `populate` parameter is used to specify
-   * the fields that should be populated in the returned data. It can be a single object or an array of
-   * objects. Each object in the array represents a field to be populated and can have the following
-   * properties:
-   * @returns a response message object with the following properties:
-   * - success_status: a boolean indicating whether the operation was successful or not
-   * - message: a string message indicating the status of the operation
-   * - data: an array containing the fetched data
+   * Asynchronously retrieves a single document from a MongoDB collection.
+   *
+   * @param {Object} params - The parameters for retrieving the document.
+   * @param {CrudModelI<T>} params.modelData - The model data for the MongoDB collection.
+   * @param {FilterQuery<T>} params.data - The filter query for finding the document.
+   * @param {PopulateFieldI<T> | PopulateFieldI<T>[]} params.populate - The populate options for the document.
+   * @returns {Promise<any>} The response message containing the retrieved document.
+   * @throws {CustomError} If the document is not found.
    */
   static async getOne<T>({
     modelData,
     data,
     populate,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: FilterQuery<T>;
-    populate: PopulateFieldI | PopulateFieldI[];
+    populate: PopulateFieldI<T> | PopulateFieldI<T>[];
   }) {
     // const response = await CrudService.
     const getData = [];
     let getOne: any;
 
-    getOne = modelData.Model.findOne(data).select(modelData.exempt);
+    getOne = modelData.Model.findOne(data).select(modelData.exempt.join(" "));
 
     if (!getOne)
       throw new CustomError(
         httpStatus.NOT_FOUND,
         `${modelData} is not successfully fetched`
       );
-    if (populate && Array.isArray(populate))
-      populate.forEach((pop) => {
-        if (pop.model)
-          getOne = getOne.populate({
-            path: pop.model,
-            select: pop.fields,
-            populate: pop.second_layer_populate,
-          });
-      });
-    else if (populate && !Array.isArray(populate))
-      if (populate.model)
-        getOne = getOne.populate({
-          path: populate.model,
-          select: populate.fields,
-          populate: populate.second_layer_populate,
-        });
+
+    if (populate) getOne = CrudService.populateModel<T>(getOne, populate);
     const gotten = await getOne.exec();
 
     getData.push(gotten);

@@ -10,7 +10,7 @@ describe("CrudService", () => {
     // Arrange
     const modelData = {
       Model: MyModel,
-      exempt: "-password",
+      exempt: ["-password"],
     };
 
     const data = {
@@ -41,7 +41,7 @@ describe("CrudService", () => {
     // Arrange
     const modelData = {
       Model: MyModel,
-      exempt: "-password",
+      exempt: ["-password"],
     };
 
     const data = {

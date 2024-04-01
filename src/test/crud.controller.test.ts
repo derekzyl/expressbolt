@@ -28,7 +28,7 @@ describe("CrudController", () => {
 
     const modelData = {
       Model: Model,
-      exempt: "field1 field2",
+      exempt: ["field1 field2"],
     };
 
     const data = {
@@ -82,7 +82,7 @@ describe("CrudController", () => {
 
     const modelData = {
       Model: Model,
-      exempt: "field1 field2",
+      exempt: ["field1 field2"],
     };
 
     const data = {

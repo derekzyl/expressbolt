@@ -12,6 +12,10 @@ ExpressBolt is a project aimed at simplifying CRUD operations in Express.js appl
 
 ---
 
+## like and star
+
+kindly  star this project on github [expressbolt](https://github.com/derekzyl/expressbolt) if you find it helpful
+
 ## Introduction
 
 ExpressBolt is a middleware layer built on top of Express.js, a popular web framework for Node.js. It offers a set of utility classes and functions to streamline the development of RESTful APIs with Express and Mongoose.
@@ -203,7 +207,7 @@ export async function getAllUsers(
   });
 
   crud.getMany<UserI>({
-    modelData: { Model: userModel.model, exempt: "-password" },
+    modelData: { Model: userModel.model, exempt: ["-password"] },
     filter: { name: req.body.name },
     populate: {},
     query: req.query,
@@ -231,7 +235,7 @@ ___
 - `delete<T>({ modelData, data })`: Deletes data from a model using a filter query.
 - `getOne<T>({ modelData, data, populate })`: Retrieves one document from a database using a given model, data filter, and optional population fields.
 - `T` : data type
-- `U`: data doc
+
 
 ___
 
@@ -278,17 +282,17 @@ the  crudservice is basically a function that you can reuse here you handle the 
 // Creating a new document
 
 export async function createUser(user: UserI) {
-  const userCreate = await CrudService.create<UserI, UserDocI>({
+  const userCreate = await CrudService.create<UserI>({
     check: { email: user.email },
     data: user,
-    modelData: { Model: userModel.model, exempt: "-password" },
+    modelData: { Model: userModel.model, exempt: ["-password"] },
   });
   return userCreate;
 }
 
 export async function getUsers(id: mongoose.Types.ObjectId) {
   const user = await CrudService.getOne<UserI>({
-    modelData: { Model: userModel.model, exempt: "-password" },
+    modelData: { Model: userModel.model, exempt: ["-password" ]},
     data: { _id: id },
     populate: {},
   });
@@ -318,7 +322,7 @@ ___
 - `delete`: Deletes documents from the database based on a filter query.
 - `getOne`: Retrieves data from the database based on a filter query and optional population fields.
 - `T` : data type
-- `U`: data doc
+
 
 ___
 
@@ -512,10 +516,10 @@ function getManyBlog(req: Request, res: Response, next: NextFunction) {
     useNext: false,
   });
 
-  crud.getMany<BlogDocI>({
-    modelData: { Model: blogModel.model, exempt: "-_v" },
+  crud.getMany<BlogI>({
+    modelData: { Model: blogModel.model, [exempt: "-_v" ]},
     filter: { author: req.user.id },
-    populate: { model: "author", fields: "name" },
+    populate: { model: "author", fields: ["name"] },
     query: req.query,
   });
 }
@@ -529,8 +533,8 @@ async function deleteBlog(req: Request, res: Response, next: NextFunction) {
     useNext: false,
   });
 
-  await crud.delete<BlogDocI>({
-    modelData: { Model: blogModel.model, exempt: "-_v" },
+  await crud.delete<BlogI>({
+    modelData: { Model: blogModel.model, [exempt: "-_v"] },
     data: { _id: req.body.id },
   });
 }

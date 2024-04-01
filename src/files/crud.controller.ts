@@ -5,13 +5,8 @@ import CrudService from "./crud.service";
 import { errorCenter } from "./error.handler";
 import { CrudModelI, PopulateFieldI } from "./interface.crud";
 
-/**
- * Crud functionality
- *
- *
- */
-/* The `CrudC` class is a TypeScript class that provides CRUD operations (create, read, update, delete)
-for a given model. */
+/* The `CrudController` class in TypeScript provides methods for handling CRUD operations with a
+request, response, and next function, supporting create, update, delete, and fetch operations. */
 class CrudController {
   request: Request;
 
@@ -54,30 +49,17 @@ class CrudController {
     this.env = env;
   }
 
-  /**
-   * The function creates a new document in a database using a given model, data, and check query, and
-   * returns a response or an error.
-   * @param {CrudModelI} modelData - A variable representing a CRUD model interface or class.
-   * @param {T} data - The `data` parameter is of type `T` and represents the data that you want to
-   * create in the database. It could be an object or any other data type that matches the schema of
-   * the `modelData` model.
-   * @param check - The `check` parameter is a query object used to filter the data when creating a
-   * new record. It is of type `FilterQuery<U>`, where `U` represents the type of the filter criteria.
-   * This parameter allows you to specify conditions that the created record must meet in order to be
-   * returned
-   * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
-   */
-  async create<T, U>({
+  async create<T>({
     modelData,
     data,
     check,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: T;
-    check: FilterQuery<U>;
+    check: FilterQuery<T & Document>;
   }): Promise<Response | NextFunction | void> {
     try {
-      const response = await CrudService.create({ modelData, data, check });
+      const response = await CrudService.create<T>({ modelData, data, check });
 
       return this.response.status(httpStatus.CREATED).json(response);
     } catch (error) {
@@ -97,14 +79,14 @@ class CrudController {
    * @param {FilterQuery<U>[]} check - The `check` parameter is an array of `FilterQuery<U>` objects.
    * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
    */
-  async createMany<T, U>({
+  async createMany<T>({
     check,
     modelData,
     data,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: T[];
-    check: FilterQuery<U>[];
+    check: FilterQuery<T & Document>[];
   }): Promise<Response | NextFunction | void> {
     try {
       const response = await CrudService.createMany({ modelData, data, check });
@@ -128,17 +110,17 @@ class CrudController {
    * updated. The `filter` parameter is of type `FilterQuery<U>`, where `U` is the type of the filter
    * @returns a promise that resolves to a response object.
    */
-  async update<T, U>({
+  async update<T>({
     data,
     modelData,
     filter,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: UpdateQuery<T>;
-    filter: FilterQuery<U>;
+    filter: FilterQuery<T & Document>;
   }) {
     try {
-      const response = await CrudService.update({ modelData, data, filter });
+      const response = await CrudService.update<T>({ modelData, data, filter });
 
       return this.response.status(httpStatus.OK).json(response);
     } catch (error) {
@@ -163,12 +145,12 @@ class CrudController {
    * const crud = new Crud(request, response, next);
    * const modelData = {
    *   Model: Model,
-   *   exempt: 'field1 field2',
+   *   exempt: ['field1','field2'],
    * };
    * const query = request.query;
    * const populate = {
    *   model: 'relatedModel',
-   *   fields: 'field1 field2',
+   *   fields: ['field1', 'field2'],
    *   second_layer_populate: 'nestedModel',
    * };
    * const category = { category: 'category1' };
@@ -184,13 +166,13 @@ class CrudController {
     populate,
     query,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     query: any;
-    populate: PopulateFieldI | PopulateFieldI[];
+    populate: PopulateFieldI<T> | PopulateFieldI<T>[];
     filter: FilterQuery<T> | null;
   }) {
     try {
-      const response = await CrudService.getMany({
+      const response = await CrudService.getMany<T>({
         modelData,
         query,
         populate,
@@ -227,11 +209,36 @@ class CrudController {
     data,
     modelData,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: FilterQuery<T>;
   }) {
     try {
-      const response = await CrudService.delete({ modelData, data });
+      const response = await CrudService.delete<T>({ modelData, data });
+
+      this.response.status(httpStatus.OK).json(response);
+    } catch (error) {
+      return this.useNext
+        ? this.next(error)
+        : errorCenter({ env: this.env, error: error, response: this.response });
+    }
+  }
+
+  /**
+   * This TypeScript function deletes multiple documents based on a filter query using a CRUD service.
+   * @param  - The `deleteMany` function takes in two parameters:
+   * @returns The `deleteMany` method is returning the response from the `CrudService.deleteMany`
+   * function call if successful. If there is an error, it will either call `this.next(error)` if
+   * `this.useNext` is true, or it will call `errorCenter` function with the provided parameters.
+   */
+  async deleteMany<T>({
+    data,
+    modelData,
+  }: {
+    modelData: CrudModelI<T>;
+    data: FilterQuery<T>;
+  }) {
+    try {
+      const response = await CrudService.deleteMany<T>({ modelData, data });
 
       this.response.status(httpStatus.OK).json(response);
     } catch (error) {
@@ -271,9 +278,9 @@ class CrudController {
     modelData,
     populate,
   }: {
-    modelData: CrudModelI;
+    modelData: CrudModelI<T>;
     data: FilterQuery<T>;
-    populate: PopulateFieldI | PopulateFieldI[];
+    populate: PopulateFieldI<T> | PopulateFieldI<T>[];
   }) {
     try {
       const response = await CrudService.getOne({ modelData, data, populate });
