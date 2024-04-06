@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction, request } from 'express';
 import mongoose, { Model, Document as Document$1, PopulateOptions, FilterQuery, UpdateQuery, SchemaDefinitionProperty } from 'mongoose';
 
+type PrefixedKeys<T> = {
+    [K in keyof T]: `-${string & keyof T}`;
+}[keyof T];
 interface CrudModelI<V> {
     Model: Model<any>;
-    exempt: (keyof (V & Document$1) extends string ? string : never | `-${keyof (V & Document$1) extends string ? string : never}`)[];
+    exempt: (keyof (Pick<Document$1, "__v" | "id" | "_id"> & V) | PrefixedKeys<Pick<Document$1, "__v" | "id" | "_id"> & V>)[];
 }
 interface PopulateFieldI<V> {
     path?: keyof V;
-    fields?: (keyof V extends string ? string : never)[];
+    fields?: string[];
     second_layer_populate?: PopulateOptions | string;
 }
 

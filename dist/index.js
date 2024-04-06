@@ -173,7 +173,7 @@ var Queries = class {
       const sortBy = this.request_query.sort.split(",").join(" ");
       this.model = this.model.sort(sortBy);
     } else {
-      this.model = this.model.sort("-created_at");
+      this.model = this.model.sort("-createdAt");
     }
     return this;
   }
@@ -230,7 +230,7 @@ var CrudService = class _CrudService {
       if (find) {
         throw new error_handler_default(
           import_http_status.default.BAD_REQUEST,
-          `the data ${JSON.stringify(
+          `the data for:  ${JSON.stringify(
             Object.keys(check).join(", ")
           )} already exists in the database`
         );
@@ -321,10 +321,9 @@ var CrudService = class _CrudService {
       modelData
     }) {
       const dataF = [];
-      const findAndUpdate = yield modelData.Model.findOneAndUpdate(
-        filter,
-        data
-      ).select(modelData.exempt.join(" "));
+      const findAndUpdate = modelData.exempt.length > 0 ? yield modelData.Model.findOneAndUpdate(filter, data).select(
+        modelData.exempt.join(" ")
+      ) : yield modelData.Model.findOneAndUpdate(filter, data);
       if (!findAndUpdate) {
         throw new error_handler_default(
           import_http_status.default.BAD_REQUEST,
