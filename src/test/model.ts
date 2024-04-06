@@ -5,3 +5,8 @@ const modelSchema = new mongoose.Schema({
 });
 
 export const MyModel = mongoose.model("MyModel", modelSchema);
+
+export interface MyModelInterface {
+  name: string;
+  age: number;
+}

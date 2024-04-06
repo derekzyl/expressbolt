@@ -2,7 +2,7 @@
 
 import CrudService from "../files/crud.service";
 import CustomError from "../files/error.handler";
-import { MyModel } from "./model";
+import { MyModel, MyModelInterface } from "./model";
 
 describe("CrudService", () => {
   // Successfully create a new document and return it
@@ -10,7 +10,7 @@ describe("CrudService", () => {
     // Arrange
     const modelData = {
       Model: MyModel,
-      exempt: ["-password"],
+      exempt: [],
     };
 
     const data = {
@@ -23,8 +23,8 @@ describe("CrudService", () => {
     };
 
     // Act
-    const result = await CrudService.create({
-      modelData,
+    const result = await CrudService.create<MyModelInterface>({
+      modelData: { Model: MyModel, exempt: ["-age"] },
       data,
       check,
     });
@@ -56,7 +56,7 @@ describe("CrudService", () => {
     // Act & Assert
     await expect(
       CrudService.create({
-        modelData,
+        modelData: { Model: MyModel, exempt: ["age"] },
         data,
         check,
       })

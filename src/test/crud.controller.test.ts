@@ -6,6 +6,7 @@ import { Model } from "mongoose";
 import CrudController from "../files/crud.controller";
 import CrudService from "../files/crud.service";
 import CustomError from "../files/error.handler";
+import { MyModelInterface } from "./model";
 
 describe("CrudController", () => {
   // should successfully create a new document when create method is called with valid data
@@ -28,11 +29,12 @@ describe("CrudController", () => {
 
     const modelData = {
       Model: Model,
-      exempt: ["field1 field2"],
+      exempt: ["-name", "age"],
     };
 
     const data = {
-      // data to be created
+      name: "john",
+      age: 30,
     };
 
     const check = {
@@ -47,8 +49,8 @@ describe("CrudController", () => {
     });
 
     // Invoke the create method
-    await crudController.create({
-      modelData,
+    await crudController.create<MyModelInterface>({
+      modelData: { Model, exempt: ["-age"] },
       data,
       check,
     });
@@ -80,13 +82,9 @@ describe("CrudController", () => {
       env: "development",
     });
 
-    const modelData = {
-      Model: Model,
-      exempt: ["field1 field2"],
-    };
-
     const data = {
-      // data to be created
+      age: 34,
+      name: "john",
     };
 
     const check = {
@@ -101,8 +99,8 @@ describe("CrudController", () => {
       );
 
     // Invoke the create method
-    await crudController.create({
-      modelData,
+    await crudController.create<MyModelInterface>({
+      modelData: { Model, exempt: ["-__v", "-_id", "-age"] },
       data,
       check,
     });
