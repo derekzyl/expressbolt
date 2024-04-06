@@ -35,7 +35,7 @@ class CrudService {
     if (find) {
       throw new CustomError(
         httpStatus.BAD_REQUEST,
-        `the data ${JSON.stringify(
+        `the data for:  ${JSON.stringify(
           Object.keys(check).join(", ")
         )} already exists in the database`
       );
@@ -145,10 +145,12 @@ class CrudService {
   }): Promise<any> {
     const dataF: Array<any> = [];
 
-    const findAndUpdate = await modelData.Model.findOneAndUpdate(
-      filter,
-      data
-    ).select(modelData.exempt.join(" "));
+    const findAndUpdate =
+      modelData.exempt.length > 0
+        ? await modelData.Model.findOneAndUpdate(filter, data).select(
+            modelData.exempt.join(" ")
+          )
+        : await modelData.Model.findOneAndUpdate(filter, data);
     if (!findAndUpdate) {
       throw new CustomError(
         httpStatus.BAD_REQUEST,

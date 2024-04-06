@@ -46,7 +46,7 @@ class Queries {
       const sortBy = this.request_query.sort.split(",").join(" ");
       this.model = this.model.sort(sortBy);
     } else {
-      this.model = this.model.sort("-created_at");
+      this.model = this.model.sort("-createdAt");
     }
 
     return this;
