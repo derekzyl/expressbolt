@@ -519,15 +519,14 @@ var crud_service_default = CrudService;
 // src/files/crud.controller.ts
 var CrudController = class {
   /**
-   * The constructor function takes in a request, response, and next function as parameters.
-   * @param {Request} request - The request object represents the HTTP request made by the client. It
-   * contains information such as the URL, headers, query parameters, and body of the request.
-   * @param {Response} response - The `response` parameter is an object that represents the HTTP
-   * response that will be sent back to the client. It contains methods and properties that allow you
-   * to set the response status code, headers, and body.
-   * @param {NextFunction} next - The `next` parameter is a function that is used to pass control to
-   * the next middleware function in the request-response cycle. It is typically used to invoke the
-   * next middleware function in the chain.
+   * Constructor for creating an instance of the class.
+   *
+   * @param {Object} options - The options object containing request, response, next, useNext, and env.
+   * @param {Request} options.request - The request object.
+   * @param {Response} options.response - The response object.
+   * @param {NextFunction} options.next - The next function.
+   * @param {boolean} [options.useNext=true] - Flag indicating whether to use the next function.
+   * @param {"development" | "production"} [options.env="development"] - The environment setting.
    */
   constructor({
     request,
@@ -542,6 +541,14 @@ var CrudController = class {
     this.useNext = useNext;
     this.env = env;
   }
+  /**
+   * A description of the entire function.
+   *
+   * @param {CrudModelI<T>} modelData - description of parameter
+   * @param {T} data - description of parameter
+   * @param {FilterQuery<T & Document>} check - description of parameter
+   * @return {Promise<Response | NextFunction | void>} description of return value
+   */
   create(_0) {
     return __async(this, arguments, function* ({
       modelData,
@@ -557,14 +564,13 @@ var CrudController = class {
     });
   }
   /**
-   * The function creates multiple documents in a database using a given model, data, and check.
-   * @param {CrudModelI} modelData - The `modelData` parameter is a variable representing a CRUD model. It
-   * is of type `CrudModelI`, which is an interface defining the structure and behavior of a CRUD
-   * model.
-   * @param {T[]} data - The `data` parameter is an array of objects of type `T`. It represents the
-   * data that needs to be created in the database.
-   * @param {FilterQuery<U>[]} check - The `check` parameter is an array of `FilterQuery<U>` objects.
-   * @returns a Promise that resolves to either a Response object, a NextFunction object, or void.
+   * A function to create multiple records in the database.
+   *
+   * @param {Object} param0 - Object containing modelData, data, and check
+   * @param {CrudModelI<T>} param0.modelData - The model data for the records
+   * @param {T[]} param0.data - The array of records to be created
+   * @param {FilterQuery<T & Document>[]} param0.check - The filter query for checking existing records
+   * @return {Promise<Response | NextFunction | void>} A promise that resolves to a response or next function, or void in case of error
    */
   createMany(_0) {
     return __async(this, arguments, function* ({
