@@ -6,7 +6,7 @@ type PrefixedKeys<T> = {
 }[keyof T];
 interface CrudModelI<V> {
     Model: Model<any>;
-    exempt: (keyof (Pick<Document$1, "__v" | "id" | "_id"> & V) | PrefixedKeys<Pick<Document$1, "__v" | "id" | "_id"> & V>)[];
+    select: (keyof (Pick<Document$1, "__v" | "id" | "_id"> & V) | PrefixedKeys<Pick<Document$1, "__v" | "id" | "_id"> & V>)[];
 }
 interface PopulateFieldI<V> {
     path?: keyof V;
@@ -90,7 +90,7 @@ declare class CrudController {
      * const crud = new Crud(request, response, next);
      * const modelData = {
      *   Model: Model,
-     *   exempt: ['field1','field2'],
+     *   select: ['field1','field2'],
      * };
      * const query = request.query;
      * const populate = {
@@ -126,7 +126,7 @@ declare class CrudController {
      * const crud = new Crud(request, response, next);
      * const modelData = {
      *   Model: Model,
-     *   exempt: 'field1 field2',
+     *   select: 'field1 field2',
      * }
      */
     delete<T>({ data, modelData, }: {
@@ -160,7 +160,7 @@ declare class CrudController {
      * ```ts
      * CrudModelI {
      * model: Model<any>;
-     *exempt: string;
+     *select: string;
      *  }
      *   populate: { model?: string | undefined; fields?: string | undefined } ```
      *

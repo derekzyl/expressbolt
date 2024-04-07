@@ -8,7 +8,7 @@ describe("CrudService", () => {
     // Arrange
     const modelData = {
       Model: MyModel,
-      exempt: [],
+      select: [],
     };
 
     const data = {
@@ -22,7 +22,7 @@ describe("CrudService", () => {
 
     // Act
     const result = await CrudService.create<MyModelInterface>({
-      modelData: { Model: MyModel, exempt: ["-age"] },
+      modelData: { Model: MyModel, select: ["-age"] },
       data,
       check,
     });
@@ -39,7 +39,7 @@ describe("CrudService", () => {
     // Arrange
     const modelData = {
       Model: MyModel,
-      exempt: ["-password"],
+      select: ["-password"],
     };
 
     const data = {
@@ -54,7 +54,7 @@ describe("CrudService", () => {
     // Act & Assert
     await expect(
       CrudService.create({
-        modelData: { Model: MyModel, exempt: ["age"] },
+        modelData: { Model: MyModel, select: ["age"] },
         data,
         check,
       })

@@ -27,7 +27,7 @@ describe("CrudController", () => {
 
     const modelData = {
       Model: Model,
-      exempt: ["-name", "age"],
+      select: ["-name", "age"],
     };
 
     const data = {
@@ -48,7 +48,7 @@ describe("CrudController", () => {
 
     // Invoke the create method
     await crudController.create<MyModelInterface>({
-      modelData: { Model, exempt: ["-age"] },
+      modelData: { Model, select: ["-age"] },
       data,
       check,
     });
@@ -98,7 +98,7 @@ describe("CrudController", () => {
 
     // Invoke the create method
     await crudController.create<MyModelInterface>({
-      modelData: { Model, exempt: ["-__v", "-_id", "-age"] },
+      modelData: { Model, select: ["-__v", "-_id", "-age"] },
       data,
       check,
     });

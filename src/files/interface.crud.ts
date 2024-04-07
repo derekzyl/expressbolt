@@ -4,7 +4,7 @@ type PrefixedKeys<T> = { [K in keyof T]: `-${string & keyof T}` }[keyof T];
 
 export interface CrudModelI<V> {
   Model: Model<any>;
-  exempt: (
+  select: (
     | keyof (Pick<Document, "__v" | "id" | "_id"> & V)
     | PrefixedKeys<Pick<Document, "__v" | "id" | "_id"> & V>
   )[] /* (

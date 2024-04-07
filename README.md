@@ -207,7 +207,7 @@ export async function getAllUsers(
   });
 
   crud.getMany<UserI>({
-    modelData: { Model: userModel.model, exempt: ["-password"] },
+    modelData: { Model: userModel.model, select: ["-password"] },
     filter: { name: req.body.name },
     populate: {},
     query: req.query,
@@ -246,7 +246,7 @@ ___
 - `next`: The next function is used to pass control to the next middleware function in the request-response cycle.
 - `useNext`: A boolean flag indicating whether to use the next middleware function.
 - `env`: The environment (development or production) in which the class is being used.
-- `modelData` : it contains the `model` and the `exempt` the exempt are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g exempt:'-password'` will remove the password field
+- `modelData` : it contains the `model` and the `select` the select are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g select:'-password'` will remove the password field
 - `check`: it checks for fileds you want to be sure its not there before you create
 - `filter`: will filter the fields you want before you update or get,
 - `data`: its the payload in `create` the search query in `getOne` and `delete`
@@ -285,14 +285,14 @@ export async function createUser(user: UserI) {
   const userCreate = await CrudService.create<UserI>({
     check: { email: user.email },
     data: user,
-    modelData: { Model: userModel.model, exempt: ["-password"] },
+    modelData: { Model: userModel.model, select: ["-password"] },
   });
   return userCreate;
 }
 
 export async function getUsers(id: mongoose.Types.ObjectId) {
   const user = await CrudService.getOne<UserI>({
-    modelData: { Model: userModel.model, exempt: ["-password" ]},
+    modelData: { Model: userModel.model, select: ["-password" ]},
     data: { _id: id },
     populate: {},
   });
@@ -351,7 +351,7 @@ const prod = {
 }
 ```
 
-- `modelData` : it contains the `model` and the `exempt` the exempt are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g exempt:'-password'` will remove the password field
+- `modelData` : it contains the `model` and the `select` the select are fields you want or dont want to be returned adding `-` to the field will remove it when it returns `e.g select:'-password'` will remove the password field
 - `check`: it checks for fileds you want to be sure its not there before you create
 - `filter`: will filter the fields you want before you update or get,
 - `data`: its the payload in `create` the search query in `getOne` and `delete`
@@ -517,7 +517,7 @@ function getManyBlog(req: Request, res: Response, next: NextFunction) {
   });
 
   crud.getMany<BlogI>({
-    modelData: { Model: blogModel.model, [exempt: "-_v" ]},
+    modelData: { Model: blogModel.model, [select: "-_v" ]},
     filter: { author: req.user.id },
     populate: { model: "author", fields: ["name"] },
     query: req.query,
@@ -534,7 +534,7 @@ async function deleteBlog(req: Request, res: Response, next: NextFunction) {
   });
 
   await crud.delete<BlogI>({
-    modelData: { Model: blogModel.model, [exempt: "-_v"] },
+    modelData: { Model: blogModel.model, [select: "-_v"] },
     data: { _id: req.body.id },
   });
 }

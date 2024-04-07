@@ -244,7 +244,7 @@ var CrudService = class _CrudService {
         );
       }
       const dat = yield modelData.Model.findById(created._id).select(
-        modelData.exempt.join(" ")
+        modelData.select.join(" ")
       );
       return responseMessage_default({
         success_status: true,
@@ -291,14 +291,14 @@ var CrudService = class _CrudService {
           `${modelData.Model.collection.collectionName} is not successfully created`
         );
       }
-      const exemptedData = yield Promise.all(
+      const selectedData = yield Promise.all(
         created.map(
-          (item) => modelData.Model.findById(item._id).select(modelData.exempt.join(" "))
+          (item) => modelData.Model.findById(item._id).select(modelData.select.join(" "))
         )
       );
       return responseMessage_default({
         success_status: true,
-        data: exemptedData,
+        data: selectedData,
         message: "Successfully created"
       });
     });
@@ -321,8 +321,8 @@ var CrudService = class _CrudService {
       modelData
     }) {
       const dataF = [];
-      const findAndUpdate = modelData.exempt.length > 0 ? yield modelData.Model.findOneAndUpdate(filter, data).select(
-        modelData.exempt.join(" ")
+      const findAndUpdate = modelData.select.length > 0 ? yield modelData.Model.findOneAndUpdate(filter, data).select(
+        modelData.select.join(" ")
       ) : yield modelData.Model.findOneAndUpdate(filter, data);
       if (!findAndUpdate) {
         throw new error_handler_default(
@@ -365,8 +365,8 @@ var CrudService = class _CrudService {
       const all = [];
       const processModel = (model2) => __async(this, null, function* () {
         let modelFind = filter ? model2.Model.find(filter) : model2.Model.find();
-        if (model2.exempt) {
-          modelFind = modelFind.select(model2.exempt.join(" "));
+        if (model2.select) {
+          modelFind = modelFind.select(model2.select.join(" "));
         }
         if (populate) {
           modelFind = _CrudService.populateModel(modelFind, populate);
@@ -496,7 +496,7 @@ var CrudService = class _CrudService {
     }) {
       const getData = [];
       let getOne;
-      getOne = modelData.Model.findOne(data).select(modelData.exempt.join(" "));
+      getOne = modelData.Model.findOne(data).select(modelData.select.join(" "));
       if (!getOne)
         throw new error_handler_default(
           import_http_status.default.NOT_FOUND,
@@ -621,7 +621,7 @@ var CrudController = class {
    * const crud = new Crud(request, response, next);
    * const modelData = {
    *   Model: Model,
-   *   exempt: ['field1','field2'],
+   *   select: ['field1','field2'],
    * };
    * const query = request.query;
    * const populate = {
@@ -671,7 +671,7 @@ var CrudController = class {
    * const crud = new Crud(request, response, next);
    * const modelData = {
    *   Model: Model,
-   *   exempt: 'field1 field2',
+   *   select: 'field1 field2',
    * }
    */
   delete(_0) {
@@ -723,7 +723,7 @@ var CrudController = class {
    * ```ts
    * CrudModelI {
    * model: Model<any>;
-   *exempt: string;
+   *select: string;
    *  }
    *   populate: { model?: string | undefined; fields?: string | undefined } ```
    *

@@ -52,7 +52,7 @@ class CrudService {
     }
 
     const dat = await modelData.Model.findById(created._id).select(
-      modelData.exempt.join(" ")
+      modelData.select.join(" ")
     );
 
     return responseMessage<U>({
@@ -110,15 +110,15 @@ class CrudService {
       );
     }
 
-    const exemptedData = await Promise.all(
+    const selectedData = await Promise.all(
       created.map((item) =>
-        modelData.Model.findById(item._id).select(modelData.exempt.join(" "))
+        modelData.Model.findById(item._id).select(modelData.select.join(" "))
       )
     );
 
     return responseMessage<(T & Document)[]>({
       success_status: true,
-      data: exemptedData,
+      data: selectedData,
       message: "Successfully created",
     });
   }
@@ -146,9 +146,9 @@ class CrudService {
     const dataF: Array<any> = [];
 
     const findAndUpdate =
-      modelData.exempt.length > 0
+      modelData.select.length > 0
         ? await modelData.Model.findOneAndUpdate(filter, data).select(
-            modelData.exempt.join(" ")
+            modelData.select.join(" ")
           )
         : await modelData.Model.findOneAndUpdate(filter, data);
     if (!findAndUpdate) {
@@ -197,8 +197,8 @@ class CrudService {
     const all: any[] = [];
     const processModel = async (model: CrudModelI<T>) => {
       let modelFind = filter ? model.Model.find(filter) : model.Model.find();
-      if (model.exempt) {
-        modelFind = modelFind.select(model.exempt.join(" "));
+      if (model.select) {
+        modelFind = modelFind.select(model.select.join(" "));
       }
       if (populate) {
         modelFind = CrudService.populateModel(modelFind, populate);
@@ -382,7 +382,7 @@ class CrudService {
     const getData = [];
     let getOne: any;
 
-    getOne = modelData.Model.findOne(data).select(modelData.exempt.join(" "));
+    getOne = modelData.Model.findOne(data).select(modelData.select.join(" "));
 
     if (!getOne)
       throw new CustomError(

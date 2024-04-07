@@ -1,6 +1,6 @@
 {
   "name": "expressbolt",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Crud helper using mongoose to make creation of api fast",
   "author": "Derek Og <derekzyl@gmail.com>",
   "keywords": [

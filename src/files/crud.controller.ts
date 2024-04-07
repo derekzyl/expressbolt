@@ -145,7 +145,7 @@ class CrudController {
    * const crud = new Crud(request, response, next);
    * const modelData = {
    *   Model: Model,
-   *   exempt: ['field1','field2'],
+   *   select: ['field1','field2'],
    * };
    * const query = request.query;
    * const populate = {
@@ -202,7 +202,7 @@ class CrudController {
    * const crud = new Crud(request, response, next);
    * const modelData = {
    *   Model: Model,
-   *   exempt: 'field1 field2',
+   *   select: 'field1 field2',
    * }
    */
   async delete<T>({
@@ -264,7 +264,7 @@ class CrudController {
    * ```ts
    * CrudModelI {
    * model: Model<any>;
-   *exempt: string;
+   *select: string;
    *  }
    *   populate: { model?: string | undefined; fields?: string | undefined } ```
    *
