@@ -236,7 +236,6 @@ ___
 - `getOne<T>({ modelData, data, populate })`: Retrieves one document from a database using a given model, data filter, and optional population fields.
 - `T` : data type
 
-
 ___
 
 ### Fields
@@ -322,7 +321,6 @@ ___
 - `delete`: Deletes documents from the database based on a filter query.
 - `getOne`: Retrieves data from the database based on a filter query and optional population fields.
 - `T` : data type
-
 
 ___
 
@@ -465,20 +463,194 @@ ___
 
 ```typescript
 
+import * as dotenv from "dotenv";
+import express, { Express, NextFunction, Request, Response } from "express";
+import {
+  CrudController,
+  CrudService,
+  errorCenter,
+  generateDynamicSchema,
+} from "expressbolt";
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+
+dotenv.config();
+
+interface UserI {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface ModelI {
+  isEmailTaken(
+    email: string,
+    excludeUserId?: mongoose.Types.ObjectId
+  ): Promise<boolean>;
+
+  paginate(
+    filter: Record<string, any>,
+    options: Record<string, any>
+  ): Promise<any>;
+}
+/* This code snippet is creating a dynamic Mongoose schema for a user model using the
+`generateDynamicSchema` function. Here's a breakdown of what each part of the code is doing: */
+const userModel = generateDynamicSchema<UserI, ModelI>({
+  modelName: "USER",
+  fields: {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  schemaOptions: {
+    timeStamp: true,
+  },
+  plugins: [
+    /* paginate */
+  ],
+});
+
+const { model: USER, schema } = userModel;
+
+schema.pre("save", async function (next) {
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+/**
+ * The function `createUser` creates a new user by checking the email, storing user data, and excluding
+ * the password field.
+ * @param {UserI} user - The `user` parameter in the `createUser` function is of type `UserI`, which
+ * likely represents a user object with properties such as `email`, `password`, and other user-related
+ * information.
+ * @returns The `createUser` function is returning the result of the `CrudService.create` function,
+ * which is creating a new user based on the provided `user` object. The `userCreate` variable contains
+ * the result of the creation operation, and this result is being returned by the `createUser`
+ * function.
+ */
+export async function createUser(user: UserI) {
+  const userCreate = await CrudService.create<UserI>({
+    check: { email: user.email },
+    data: user,
+    modelData: { Model: USER, select: ["-password"] },
+  });
+  return userCreate;
+}
+
+/**
+ * This TypeScript function retrieves a user by their ID while excluding the password field.
+ * @param id - The `id` parameter is of type `mongoose.Types.ObjectId`, which is a unique identifier
+ * used in Mongoose to represent a specific document in a MongoDB database.
+ * @returns The `getUsers` function is returning a user object with the specified `_id` and excluding
+ * the `password` field. The user object is fetched using the `CrudService.getOne` method with the
+ * provided parameters.
+ */
+export async function getUsers(id: mongoose.Types.ObjectId) {
+  const user = await CrudService.getOne<UserI>({
+    modelData: { Model: USER, select: ["-password"] },
+    data: { _id: id },
+    populate: {},
+  });
+  return user;
+}
+
+/**
+ * The function `getAllUsers` retrieves multiple user records based on a specified name filter using a
+ * CrudController instance.
+ * @param {Request} req - The `req` parameter in the `getAllUsers` function is the request object
+ * representing the HTTP request made to the server. It contains information about the request such as
+ * the URL, headers, parameters, body, etc. This parameter is typically provided by the Express.js
+ * framework when handling incoming HTTP requests.
+ * @param {Response} res - The `res` parameter in the `getAllUsers` function is an object representing
+ * the HTTP response that the server sends back to the client. It is used to send data back to the
+ * client in response to a request.
+ * @param {NextFunction} next - The `next` parameter in the `getAllUsers` function is a callback
+ * function that is used to pass control to the next middleware function in the stack. It is typically
+ * used in Express.js to handle errors or pass control to the next middleware function.
+ */
+export async function getAllUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const crud = new CrudController({
+    next,
+    request: req,
+    response: res,
+    env: process.env.ENV as "production" | "development",
+    useNext: false,
+  });
+
+  crud.getMany<UserI>({
+    modelData: { Model: USER, select: ["email", "name"] },
+    filter: { name: req.body.name },
+    populate: {},
+    query: req.query,
+  });
+}
+
 interface BlogI {
   author: mongoose.Types.ObjectId;
+  category: mongoose.Types.ObjectId;
   blog: string;
   likes: number;
   title: string;
 }
 
-interface BlogDocI extends mongoose.Document, BlogI {}
 interface BlogModelI {
   isTitleTaken(
     title: string,
     excludeBlogId?: mongoose.Types.ObjectId
   ): Promise<boolean>;
 }
+
+interface CategoryI {
+  name: string;
+  image: string;
+}
+interface CategoryModelI {
+  isNameTaken(
+    name: string,
+    excludeCategoryId?: mongoose.Types.ObjectId
+  ): Promise<boolean>;
+}
+
+/* The `const categoryModel = generateDynamicSchema<CategoryI, CategoryModelI>({ ... })` code snippet
+is creating a dynamic Mongoose schema for a category model using the `generateDynamicSchema`
+function. Here's a breakdown of what each part of the code is doing: */
+const categoryModel = generateDynamicSchema<CategoryI, CategoryModelI>({
+  modelName: "CATEGORY",
+  fields: {
+    name: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String,
+    },
+  },
+  schemaOptions: {
+    timeStamp: true,
+  },
+  plugins: [
+    /* paginate */
+  ],
+});
+
+const { model: CATEGORY } = categoryModel;
+/* The `const blogModel = generateDynamicSchema<BlogI, BlogModelI>({ ... })` code snippet is creating a
+dynamic Mongoose schema for a blog model using the `generateDynamicSchema` function. Here's a
+breakdown of what each part of the code is doing: */
 const blogModel = generateDynamicSchema<BlogI, BlogModelI>({
   modelName: "BLOG",
   fields: {
@@ -486,6 +658,11 @@ const blogModel = generateDynamicSchema<BlogI, BlogModelI>({
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "USER",
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: CATEGORY,
     },
     blog: {
       type: String,
@@ -506,35 +683,64 @@ const blogModel = generateDynamicSchema<BlogI, BlogModelI>({
     /* paginate */
   ],
 });
+const { model: BLOG } = blogModel;
 
+/**
+ * The function `getManyBlog` retrieves multiple blog entries based on the request user's ID and
+ * specified criteria using a CrudController instance.
+ * @param {Request} req - The `req` parameter in the `getManyBlog` function is an object representing
+ * the HTTP request. It contains information about the request made by the client, such as the request
+ * headers, parameters, body, query parameters, and more. This parameter is typically provided by the
+ * Express.js framework when handling
+ * @param {Response} res - The `res` parameter in the function `getManyBlog` is an object representing
+ * the HTTP response that the server sends back to the client. It is used to send data back to the
+ * client in response to a request.
+ * @param {NextFunction} next - NextFunction is a callback function in Express.js that is used to pass
+ * control to the next middleware function. It is typically used to handle errors or to move to the
+ * next middleware function in the chain.
+ */
 function getManyBlog(req: Request, res: Response, next: NextFunction) {
   const crud = new CrudController({
     next,
     request: req,
     response: res,
-    env: "production",
+    env: process.env.ENV as "production" | "development",
     useNext: false,
   });
 
   crud.getMany<BlogI>({
-    modelData: { Model: blogModel.model, [select: "-_v" ]},
+    modelData: { Model: BLOG, select: ["-__v"] },
     filter: { author: req.user.id },
-    populate: { model: "author", fields: ["name"] },
+    populate: [
+      { path: "author", fields: ["name"] },
+      { path: "category", fields: ["name", "image"] },
+    ],
     query: req.query,
   });
 }
 
+/**
+ * The function `deleteBlog` uses a `CrudController` instance to delete a blog entry based on the
+ * provided ID in the request body.
+ * @param {Request} req - Request object containing information about the HTTP request
+ * @param {Response} res - The `res` parameter in the `deleteBlog` function is an object representing
+ * the HTTP response that the server sends back to the client. It is used to send data back to the
+ * client, such as status codes, headers, and response body.
+ * @param {NextFunction} next - NextFunction is a callback function that is used to pass control to the
+ * next middleware function in the stack. It is typically used in Express.js middleware functions to
+ * move to the next middleware in the chain.
+ */
 async function deleteBlog(req: Request, res: Response, next: NextFunction) {
   const crud = new CrudController({
     next,
     request: req,
     response: res,
-    env: "production",
+    env: process.env.ENV as "production" | "development",
     useNext: false,
   });
 
   await crud.delete<BlogI>({
-    modelData: { Model: blogModel.model, [select: "-_v"] },
+    modelData: { Model: BLOG, select: ["-__v"] },
     data: { _id: req.body.id },
   });
 }
@@ -542,6 +748,23 @@ async function deleteBlog(req: Request, res: Response, next: NextFunction) {
 const app: Express = express();
 
 app.get("/blog", getManyBlog);
+app.delete("/blog", deleteBlog);
+
+/* The code snippet `(err: any, req: Request, res: Response, next: NextFunction) => {
+  errorCenter({
+    env: process.env.ENV as "production" | "development",
+    error: err,
+    response: res,
+  });
+}` is defining an error handling middleware function in an Express application. Here's what it does: */
+app.use("/", (err: any, req: Request, res: Response, next: NextFunction) => {
+  errorCenter({
+    env: process.env.ENV as "production" | "development",
+    error: err,
+    response: res,
+  });
+});
+
 
 
 
