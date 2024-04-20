@@ -48,7 +48,7 @@ const generateDynamicSchema = <T, U>({
     the field definition for a specific key in the dynamic schema is an object with additional
     properties defining the field type and options. In this case, the code processes the field
     options accordingly to define the schema property for that key in the Mongoose schema being
-    generated. */
+    generated... */
     if (typeof fieldOptions === "object") {
       schemaDefinition[keys] = fieldOptions as SchemaDefinitionProperty;
     } else if (Array.isArray(fieldOptions)) {
