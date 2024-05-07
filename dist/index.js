@@ -145,8 +145,8 @@ var Queries = class {
    * parameters from an HTTP request. These query parameters are typically used to filter or sort data
    * when querying a database or API.
    */
-  constructor(model2, request_query) {
-    this.model = model2;
+  constructor(model, request_query) {
+    this.model = model;
     this.request_query = request_query;
   }
   /**
@@ -363,10 +363,10 @@ var CrudService = class _CrudService {
       query
     }) {
       const all = [];
-      const processModel = (model2) => __async(this, null, function* () {
-        let modelFind = filter ? model2.Model.find(filter) : model2.Model.find();
-        if (model2.select) {
-          modelFind = modelFind.select(model2.select.join(" "));
+      const processModel = (model) => __async(this, null, function* () {
+        let modelFind = filter ? model.Model.find(filter) : model.Model.find();
+        if (model.select) {
+          modelFind = modelFind.select(model.select.join(" "));
         }
         if (populate) {
           modelFind = _CrudService.populateModel(modelFind, populate);
@@ -374,7 +374,7 @@ var CrudService = class _CrudService {
         const queryf = new query_default(modelFind, query).filter().limitFields().paginate().sort();
         const queryG = yield queryf.model;
         if (!queryG) {
-          throw new error_handler_default(import_http_status.default.NOT_FOUND, `${model2} is not fetched`);
+          throw new error_handler_default(import_http_status.default.NOT_FOUND, `${model} is not fetched`);
         }
         all.push(queryG);
       });
@@ -405,12 +405,12 @@ var CrudService = class _CrudService {
       return modelFind;
     }
     const populateArr = Array.isArray(populate) ? populate : [populate];
-    return populateArr.reduce((model2, pop) => {
+    return populateArr.reduce((model, pop) => {
       var _a;
       if (!pop.path) {
-        return model2;
+        return model;
       }
-      return model2.populate({
+      return model.populate({
         path: pop.path,
         select: (_a = pop.fields) == null ? void 0 : _a.join(" "),
         populate: pop.second_layer_populate
@@ -760,7 +760,8 @@ var generateDynamicSchema = ({
   fields,
   modelName,
   plugins,
-  schemaOptions
+  schemaOptions,
+  model
 }) => {
   const schemaDefinition = {};
   for (const [keys, values] of Object.entries(fields)) {
@@ -784,7 +785,8 @@ var generateDynamicSchema = ({
             Object.prototype.hasOwnProperty.call(fieldOptions[0], "ref") && Object.prototype.hasOwnProperty.call(fieldOptions[0], "type") && fieldOptions[0].type === import_mongoose.default.Schema.Types.ObjectId ? schemaDefinition[keys] = fieldOptions : schemaDefinition[keys] = generateDynamicSchema({
               modelName: "",
               fields: fieldOptions[0],
-              schemaOptions: schemaOptions != null ? schemaOptions : {}
+              schemaOptions: schemaOptions != null ? schemaOptions : {},
+              model
             }).schema;
           }
           break;
@@ -815,7 +817,7 @@ var generateDynamicSchema = ({
   const schemaDef = new import_mongoose.Schema(schemaDefinition, schemaOptions);
   plugins == null ? void 0 : plugins.forEach((plugin) => schemaDef.plugin(plugin));
   return {
-    model: (0, import_mongoose.model)(modelName, schemaDef),
+    model: model(modelName, schemaDef),
     schema: schemaDef
   };
 };

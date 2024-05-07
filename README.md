@@ -97,7 +97,48 @@ interface ModelI {
 - the user model is just an abstract it is no compulsory you use it with the Crud functions
 - you can create your own schema and use it as well
 
-#### example usage
+#### update!!!  adding one extra parameter for generateDynamic schema
+
+- the model imported from mongoose is passed as a parameter as well else it wont sync with mongodb
+
+```typescript
+import {model} from 'mongoose'
+import {
+  CrudController,
+  CrudService,
+  generateDynamicSchema,
+} from "expressbolt";
+
+
+
+const userModel = generateDynamicSchema<UserI, ModelI>({
+  modelName: "USER",
+  fields: {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  schemaOptions: {
+    timeStamp: true,
+  },
+  model:model,
+  plugins: [
+    /* paginate */
+  ],
+});
+```
+
+#### previous example usage
 
 ```typescript
 import {

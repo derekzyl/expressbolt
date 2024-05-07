@@ -1,16 +1,22 @@
 import mongoose, {
+  CompileModelOptions,
   Document,
   Model,
   Schema,
   SchemaDefinition,
-  SchemaDefinitionProperty,
-  model,
+  SchemaDefinitionProperty
 } from "mongoose";
 
 // Interface for dynamic field definition
 type DynamicField<T> = {
   [key in keyof T]: SchemaDefinitionProperty<T>;
 };
+type modelT<T, U> =(
+    name: string,
+    schema?: Schema<T, any, any> | Schema<T & Document, any, any>,
+    collection?: string,
+    options?: CompileModelOptions
+  )=> Model<T>;
 
 
 /**
@@ -28,11 +34,15 @@ const generateDynamicSchema = <T, U>({
   modelName,
   plugins,
   schemaOptions,
+  model
+
 }: {
   modelName: string;
   fields: DynamicField<T>;
   plugins?: any[];
-  schemaOptions?: Record<string, any>;
+    schemaOptions?: Record<string, any>;
+  model:modelT<T&Document, Model<T&Document> &U>
+ 
 }) => {
   type ITDoc = T & Document;
   type ITModel = Model<ITDoc> & U;
@@ -73,6 +83,7 @@ const generateDynamicSchema = <T, U>({
                   modelName: "",
                   fields: fieldOptions[0],
                   schemaOptions: schemaOptions ?? {},
+                  model
                 }).schema);
           }
           break;
@@ -105,7 +116,7 @@ const generateDynamicSchema = <T, U>({
   const schemaDef = new Schema<ITDoc, ITModel>(schemaDefinition, schemaOptions);
   plugins?.forEach((plugin) => schemaDef.plugin(plugin));
   return {
-    model: model<ITDoc, ITModel>(modelName, schemaDef),
+    model: model(modelName, schemaDef),
     schema: schemaDef,
   };
 };
