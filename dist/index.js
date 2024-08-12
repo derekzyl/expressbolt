@@ -78,20 +78,20 @@ var import_http_status2 = __toESM(require("http-status"));
 var import_http_status = __toESM(require("http-status"));
 
 // src/files/responseMessage.ts
-function responseMessage(msg, config = "development") {
-  switch (msg.success_status) {
+function responseMessage(msg, config = "production") {
+  switch (msg.success) {
     case true:
       return {
         message: msg.message,
         data: msg.data,
-        success: msg.success_status,
+        success: msg.success,
         doc_length: msg.doc_length
       };
     case false:
       return {
         message: msg.message,
         error: msg.error,
-        success: msg.success_status,
+        success: msg.success,
         stack: config === "development" ? msg.stack : {}
       };
   }
@@ -123,7 +123,7 @@ var errorCenter = ({
     responseMessage_default(
       {
         message: error_info,
-        success_status: false,
+        success: false,
         data: error_message,
         stack: error.stack
       },
@@ -247,7 +247,7 @@ var CrudService = class _CrudService {
         modelData.select.join(" ")
       );
       return responseMessage_default({
-        success_status: true,
+        success: true,
         data: dat,
         message: "Successfully created"
       });
@@ -270,20 +270,22 @@ var CrudService = class _CrudService {
       data,
       modelData
     }) {
-      const checks = check.map((findr) => {
-        return Object.keys(findr).length !== 0 ? modelData.Model.findOne(findr) : null;
-      });
-      const finds = yield Promise.all(checks);
-      finds.forEach((find, index) => {
-        if (find) {
-          throw new error_handler_default(
-            import_http_status.default.BAD_REQUEST,
-            `the data ${JSON.stringify(
-              Object.keys(check[index]).join(", ")
-            )} already exists in the database`
-          );
-        }
-      });
+      if (check) {
+        const checks = check.map((findr) => {
+          return Object.keys(findr).length !== 0 ? modelData.Model.findOne(findr) : null;
+        });
+        const finds = yield Promise.all(checks);
+        finds.forEach((find, index) => {
+          if (find) {
+            throw new error_handler_default(
+              import_http_status.default.BAD_REQUEST,
+              `the data ${JSON.stringify(
+                Object.keys(check[index]).join(", ")
+              )} already exists in the database`
+            );
+          }
+        });
+      }
       const created = yield modelData.Model.insertMany(data);
       if (!created) {
         throw new error_handler_default(
@@ -297,7 +299,7 @@ var CrudService = class _CrudService {
         )
       );
       return responseMessage_default({
-        success_status: true,
+        success: true,
         data: selectedData,
         message: "Successfully created"
       });
@@ -333,7 +335,7 @@ var CrudService = class _CrudService {
         dataF.push(findAndUpdate);
       }
       return responseMessage_default({
-        success_status: true,
+        success: true,
         data: dataF[0],
         message: "Successfully updated"
       });
@@ -380,7 +382,7 @@ var CrudService = class _CrudService {
       });
       yield processModel(modelData);
       return responseMessage_default({
-        success_status: true,
+        success: true,
         message: "Data fetched successfully",
         data: all[0],
         doc_length: all.length
@@ -424,7 +426,7 @@ var CrudService = class _CrudService {
    * database using the given `modelData` and `data` parameters. Here's a breakdown of the parameters:
    * @returns The `delete` method is returning a Promise that resolves to an object with the following
    * properties:
-   * - `success_status`: a boolean value indicating the success status of the deletion operation
+   * - `success`: a boolean value indicating the success status of the deletion operation
    * - `message`: a string message indicating that the deletion was successful
    * - `data`: a string value indicating that the data was deleted
    */
@@ -441,7 +443,7 @@ var CrudService = class _CrudService {
         );
       }
       return responseMessage_default({
-        success_status: true,
+        success: true,
         message: "Deleted successfully",
         data: "deleted"
       });
@@ -453,7 +455,7 @@ var CrudService = class _CrudService {
    * @param  - The `deleteMany` function takes in two parameters:
    * @returns The `deleteMany` function returns a Promise that resolves to an object with the following
    * properties:
-   * - `success_status`: a boolean indicating the success status of the deletion operation (true in
+   * - `success`: a boolean indicating the success status of the deletion operation (true in
    * this case)
    * - `message`: a string message indicating that the deletion was successful ("Deleted successfully"
    * in this case)
@@ -472,7 +474,7 @@ var CrudService = class _CrudService {
         );
       }
       return responseMessage_default({
-        success_status: true,
+        success: true,
         message: "Deleted successfully",
         data: "deleted"
       });
@@ -507,7 +509,7 @@ var CrudService = class _CrudService {
       const gotten = yield getOne.exec();
       getData.push(gotten);
       return responseMessage_default({
-        success_status: true,
+        success: true,
         message: " fetched successfully",
         data: getData[0]
       });

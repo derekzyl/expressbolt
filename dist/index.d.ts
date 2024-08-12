@@ -13,6 +13,14 @@ interface PopulateFieldI<V> {
     fields?: string[];
     second_layer_populate?: PopulateOptions | string;
 }
+interface CustomMessageI<V> {
+    message: string;
+    success: boolean;
+    data?: V;
+    stack?: any;
+    error?: any;
+    doc_length?: number;
+}
 
 declare class CrudController {
     request: Request;
@@ -222,7 +230,7 @@ declare class CrudService {
         modelData: CrudModelI<T>;
         data: T;
         check: FilterQuery<T & Document$1>;
-    }): Promise<any>;
+    }): Promise<CustomMessageI<T & Document$1>>;
     /**
      * The function `createMany` creates multiple documents in a MongoDB collection based on an array of data.
      * It takes in a `CrudModelI` object, an array of data, and an array of filters to check for existing documents.
@@ -237,8 +245,8 @@ declare class CrudService {
     static createMany<T>({ check, data, modelData, }: {
         modelData: CrudModelI<T>;
         data: T[];
-        check: FilterQuery<T & Document$1>[];
-    }): Promise<any>;
+        check: Partial<FilterQuery<T & Document$1>>[];
+    }): Promise<CustomMessageI<(T & Document$1)[]>>;
     /**
      * The `update` static method is used to update a document in a database based on specified criteria.
      *
@@ -254,7 +262,7 @@ declare class CrudService {
         modelData: CrudModelI<T>;
         data: UpdateQuery<T>;
         filter: FilterQuery<T & Document$1>;
-    }): Promise<any>;
+    }): Promise<CustomMessageI<T & Document$1>>;
     /**
      * This function retrieves multiple documents from a MongoDB collection based on the provided
      * filter, model, populate, and query parameters.
@@ -276,7 +284,7 @@ declare class CrudService {
         query: typeof request.query;
         populate: PopulateFieldI<T> | PopulateFieldI<T>[];
         filter: FilterQuery<T> | null;
-    }): Promise<any>;
+    }): Promise<CustomMessageI<(T & Document$1)[]>>;
     /**
      * The function `populateModel` populates a model with specified fields and nested fields based on
      * the provided criteria.
@@ -298,21 +306,21 @@ declare class CrudService {
      * database using the given `modelData` and `data` parameters. Here's a breakdown of the parameters:
      * @returns The `delete` method is returning a Promise that resolves to an object with the following
      * properties:
-     * - `success_status`: a boolean value indicating the success status of the deletion operation
+     * - `success`: a boolean value indicating the success status of the deletion operation
      * - `message`: a string message indicating that the deletion was successful
      * - `data`: a string value indicating that the data was deleted
      */
     static delete<T>({ data, modelData, }: {
         modelData: CrudModelI<T>;
         data: FilterQuery<T>;
-    }): Promise<any>;
+    }): Promise<CustomMessageI<string>>;
     /**
      * This TypeScript function deletes multiple documents based on a filter query using the deleteMany
      * method and returns a success message.
      * @param  - The `deleteMany` function takes in two parameters:
      * @returns The `deleteMany` function returns a Promise that resolves to an object with the following
      * properties:
-     * - `success_status`: a boolean indicating the success status of the deletion operation (true in
+     * - `success`: a boolean indicating the success status of the deletion operation (true in
      * this case)
      * - `message`: a string message indicating that the deletion was successful ("Deleted successfully"
      * in this case)
@@ -321,7 +329,7 @@ declare class CrudService {
     static deleteMany<T>({ data, modelData, }: {
         modelData: CrudModelI<T>;
         data: FilterQuery<T>;
-    }): Promise<any>;
+    }): Promise<CustomMessageI<string>>;
     /**
      * Asynchronously retrieves a single document from a MongoDB collection.
      *
@@ -336,21 +344,7 @@ declare class CrudService {
         modelData: CrudModelI<T>;
         data: FilterQuery<T>;
         populate: PopulateFieldI<T> | PopulateFieldI<T>[];
-    }): Promise<{
-        message: string;
-        data: T;
-        success: true;
-        doc_length: number | undefined;
-        error?: undefined;
-        stack?: undefined;
-    } | {
-        message: string;
-        error: any;
-        success: false;
-        stack: any;
-        data?: undefined;
-        doc_length?: undefined;
-    }>;
+    }): Promise<CustomMessageI<T & Document$1>>;
 }
 
 declare const errorCenter: ({ error, response, env, }: {

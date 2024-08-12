@@ -20,8 +20,8 @@ export interface PopulateFieldI<V> {
 }
 export interface CustomMessageI<V> {
   message: string;
-  success_status: boolean;
-  data: V;
+  success: boolean;
+  data?: V;
   stack?: any;
   error?: any;
   doc_length?: number;

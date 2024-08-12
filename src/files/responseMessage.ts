@@ -16,14 +16,14 @@ import { CustomMessageI } from "./interface.crud";
  */
 function responseMessage<V>(
   msg: CustomMessageI<V>,
-  config: "development" | "production" = "development"
+  config: "development" | "production" = "production"
 ) {
-  switch (msg.success_status) {
+  switch (msg.success) {
     case true:
       return {
         message: msg.message,
         data: msg.data,
-        success: msg.success_status,
+        success: msg.success,
         doc_length: msg.doc_length,
       };
 
@@ -31,7 +31,7 @@ function responseMessage<V>(
       return {
         message: msg.message,
         error: msg.error,
-        success: msg.success_status,
+        success: msg.success,
         stack: config === "development" ? msg.stack : {},
       };
   }

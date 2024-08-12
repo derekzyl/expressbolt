@@ -67,7 +67,7 @@ export const errorCenter = ({
     responseMessage(
       {
         message: error_info,
-        success_status: false,
+        success: false,
         data: error_message,
         stack: error.stack,
       },

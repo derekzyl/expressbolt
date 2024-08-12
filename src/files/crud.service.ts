@@ -2,7 +2,7 @@ import { request } from "express";
 import httpStatus from "http-status";
 import { Document, FilterQuery, UpdateQuery } from "mongoose";
 import CustomError from "./error.handler";
-import { CrudModelI, PopulateFieldI } from "./interface.crud";
+import { CrudModelI, CustomMessageI, PopulateFieldI } from "./interface.crud";
 import Queries from "./query";
 import responseMessage from "./responseMessage";
 
@@ -26,7 +26,7 @@ class CrudService {
     modelData: CrudModelI<T>;
     data: T;
     check: FilterQuery<T & Document>;
-  }): Promise<any> {
+  }): Promise<CustomMessageI<T & Document>> {
     type U = T & Document;
     const find =
       Object.keys(check).length !== 0
@@ -56,7 +56,7 @@ class CrudService {
     );
 
     return responseMessage<U>({
-      success_status: true,
+      success: true,
       data: dat,
       message: "Successfully created",
     });
@@ -73,7 +73,7 @@ class CrudService {
    * @param {FilterQuery<T & Document>[]} param.check - An array of filters to check for existing documents.
    * @returns {Promise<any>} A Promise that resolves to a response message containing the successfully created documents.
    */
-  
+
   static async createMany<T>({
     check,
     data,
@@ -81,26 +81,28 @@ class CrudService {
   }: {
     modelData: CrudModelI<T>;
     data: T[];
-    check: FilterQuery<T & Document>[];
-  }): Promise<any> {
-    const checks = check.map((findr) => {
-      return Object.keys(findr).length !== 0
-        ? modelData.Model.findOne(findr)
-        : null;
-    });
+    check: Partial<FilterQuery<T & Document>>[];
+  }): Promise<CustomMessageI<(T & Document)[]>> {
+    if (check) {
+      const checks = check.map((findr) => {
+        return Object.keys(findr).length !== 0
+          ? modelData.Model.findOne(findr)
+          : null;
+      });
 
-    const finds = await Promise.all(checks);
+      const finds = await Promise.all(checks);
 
-    finds.forEach((find, index) => {
-      if (find) {
-        throw new CustomError(
-          httpStatus.BAD_REQUEST,
-          `the data ${JSON.stringify(
-            Object.keys(check[index]).join(", ")
-          )} already exists in the database`
-        );
-      }
-    });
+      finds.forEach((find, index) => {
+        if (find) {
+          throw new CustomError(
+            httpStatus.BAD_REQUEST,
+            `the data ${JSON.stringify(
+              Object.keys(check[index]).join(", ")
+            )} already exists in the database`
+          );
+        }
+      });
+    }
 
     const created = await modelData.Model.insertMany(data);
 
@@ -118,7 +120,7 @@ class CrudService {
     );
 
     return responseMessage<(T & Document)[]>({
-      success_status: true,
+      success: true,
       data: selectedData,
       message: "Successfully created",
     });
@@ -143,7 +145,7 @@ class CrudService {
     modelData: CrudModelI<T>;
     data: UpdateQuery<T>;
     filter: FilterQuery<T & Document>;
-  }): Promise<any> {
+  }): Promise<CustomMessageI<T & Document>> {
     const dataF: Array<any> = [];
 
     const findAndUpdate =
@@ -162,7 +164,7 @@ class CrudService {
     }
 
     return responseMessage<T & Document>({
-      success_status: true,
+      success: true,
       data: dataF[0],
       message: "Successfully updated",
     });
@@ -194,7 +196,7 @@ class CrudService {
     query: typeof request.query;
     populate: PopulateFieldI<T> | PopulateFieldI<T>[];
     filter: FilterQuery<T> | null;
-  }): Promise<any> {
+  }): Promise<CustomMessageI<(T & Document)[]>> {
     const all: any[] = [];
     const processModel = async (model: CrudModelI<T>) => {
       let modelFind = filter ? model.Model.find(filter) : model.Model.find();
@@ -221,9 +223,9 @@ class CrudService {
     // } else {
     await processModel(modelData);
     // }
-
-    return responseMessage<T[]>({
-      success_status: true,
+    type U = T & Document;
+    return responseMessage<U[]>({
+      success: true,
       message: "Data fetched successfully",
       data: all[0],
       doc_length: all.length,
@@ -273,7 +275,7 @@ class CrudService {
    * database using the given `modelData` and `data` parameters. Here's a breakdown of the parameters:
    * @returns The `delete` method is returning a Promise that resolves to an object with the following
    * properties:
-   * - `success_status`: a boolean value indicating the success status of the deletion operation
+   * - `success`: a boolean value indicating the success status of the deletion operation
    * - `message`: a string message indicating that the deletion was successful
    * - `data`: a string value indicating that the data was deleted
    */
@@ -283,7 +285,7 @@ class CrudService {
   }: {
     modelData: CrudModelI<T>;
     data: FilterQuery<T>;
-  }): Promise<any> {
+  }): Promise<CustomMessageI<string>> {
     // if (Array.isArray(modelData)) {
     //   Promise.all(
     //     modelData.map(async (model) => {
@@ -307,7 +309,7 @@ class CrudService {
     }
 
     return responseMessage<string>({
-      success_status: true,
+      success: true,
       message: "Deleted successfully",
       data: "deleted",
     });
@@ -318,7 +320,7 @@ class CrudService {
    * @param  - The `deleteMany` function takes in two parameters:
    * @returns The `deleteMany` function returns a Promise that resolves to an object with the following
    * properties:
-   * - `success_status`: a boolean indicating the success status of the deletion operation (true in
+   * - `success`: a boolean indicating the success status of the deletion operation (true in
    * this case)
    * - `message`: a string message indicating that the deletion was successful ("Deleted successfully"
    * in this case)
@@ -330,7 +332,7 @@ class CrudService {
   }: {
     modelData: CrudModelI<T>;
     data: FilterQuery<T>;
-  }): Promise<any> {
+  }): Promise<CustomMessageI<string>> {
     // if (Array.isArray(modelData)) {
     //   Promise.all(
     //     modelData.map(async (model) => {
@@ -354,7 +356,7 @@ class CrudService {
     }
 
     return responseMessage<string>({
-      success_status: true,
+      success: true,
       message: "Deleted successfully",
       data: "deleted",
     });
@@ -378,7 +380,7 @@ class CrudService {
     modelData: CrudModelI<T>;
     data: FilterQuery<T>;
     populate: PopulateFieldI<T> | PopulateFieldI<T>[];
-  }) {
+  }): Promise<CustomMessageI<T & Document>> {
     // const response = await CrudService.
     const getData = [];
     let getOne: any;
@@ -395,9 +397,9 @@ class CrudService {
     const gotten = await getOne.exec();
 
     getData.push(gotten);
-
-    return responseMessage<T>({
-      success_status: true,
+    type U = T & Document;
+    return responseMessage<U>({
+      success: true,
       message: " fetched successfully",
       data: getData[0],
     });
