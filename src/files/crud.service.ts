@@ -157,7 +157,7 @@ class CrudService {
     if (!findAndUpdate) {
       throw new CustomError(
         httpStatus.BAD_REQUEST,
-        `${data} not updated successfully`
+        `{modelData.Model.collection.collectionName} not updated successfully`
       );
     } else {
       dataF.push(findAndUpdate);
@@ -303,7 +303,7 @@ class CrudService {
     if (!delet) {
       throw new CustomError(
         httpStatus.NOT_FOUND,
-        `${modelData} is not successfully deleted`
+        `{modelData.Model.collection.collectionName} is not successfully deleted`
       );
       // }
     }
@@ -350,7 +350,7 @@ class CrudService {
     if (!delet) {
       throw new CustomError(
         httpStatus.NOT_FOUND,
-        `${modelData} is not successfully deleted`
+        `${modelData.Model.collection.collectionName} is not successfully deleted`
       );
       // }
     }
@@ -390,7 +390,7 @@ class CrudService {
     if (!getOne)
       throw new CustomError(
         httpStatus.NOT_FOUND,
-        `${modelData} is not successfully fetched`
+        `{modelData.Model.collection.collectionName} is not successfully fetched`
       );
 
     if (populate) getOne = CrudService.populateModel<T>(getOne, populate);
